@@ -15,7 +15,6 @@ firebase-debug.log
 
 # Secrets
 serviceAccountKey.json
-*.json
 
 # Node
 node_modules/
