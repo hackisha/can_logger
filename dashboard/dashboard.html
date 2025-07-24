@@ -247,15 +247,16 @@
         if (!isNaN(val)) {
           const percent = Math.min(val / sensor.max * 100, 100);
           bars[i].style.width = percent + '%';
-          bars[i].style.background = 'linear-gradient(to right, #00ff99, #0077ff)';
+          bars[i].style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
         }
       });
 
       rpmEl.textContent = (data.RPM ?? 0) + ' RPM';
       gearEl.textContent = data.Gear ?? 'N';
       speedEl.textContent = (data.VSS_kmh ?? 0) + ' km/h';
-      rpmBar.style.width = Math.min((data.RPM ?? 0) / 13000 * 100, 100) + '%';
-      rpmBar.style.background = 'linear-gradient(to right, #ff4f4f, #ffa500)';
+      const rpmPercent = Math.min((data.RPM ?? 0) / 13000 * 100, 100);
+      rpmBar.style.width = rpmPercent + '%';
+      rpmBar.style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
     }
 
     // Listen for any change in the entire data object
