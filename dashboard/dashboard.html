@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>무한질주 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
@@ -57,17 +58,11 @@
       align-items: center;
       border: 1px solid #2050c7;
       transition: background 0.3s ease;
+      cursor: pointer; /* 클릭 가능하도록 커서 변경 */
     }
 
     .gauge:hover {
       background: #16345e;
-    }
-
-    .gauge img {
-      width: 48px;
-      height: 38px;
-      margin-bottom: 8px;
-      filter: drop-shadow(0 0 3px #68a0ff);
     }
 
     .gauge-label {
@@ -189,6 +184,7 @@
       top: 0;
       left: 0;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
     }
     .page-nav a {
       font-family: 'Roboto Mono', monospace;
@@ -203,23 +199,62 @@
       background: #0077ff;
       color: #fff;
     }
+
+    /* --- 그래프 팝업 스타일 --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none; /* 평소엔 숨김 */
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .modal-content {
+      background: #2c2c2c;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 800px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+    }
+    #chart-title {
+        color: #fff;
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 20px;
+    }
   </style>
 </head>
 <body>
   <nav class="page-nav">
-    <a href="./dashboard.html" class="active">Main Dashboard</a>
+    <a href="./dashboard.html">Main Dashboard</a>
     <a href="./graph.html">Graph</a>
     <a href="./adu.html">ADU</a>
   </nav>
+
   <div class="dashboard">
     <div class="center-section">
       <div class="gauges-grid">
-        <div class="gauge"><div class="gauge-label">CLT1</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar0"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge"><div class="gauge-label">EOT IN</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar1"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge"><div class="gauge-label">IAT</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar2"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge"><div class="gauge-label">CLT2</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar3"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge"><div class="gauge-label">EOT OUT</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar4"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge"><div class="gauge-label">TPS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar5"></div></div><div class="gauge-bar-labels"><span>0%</span><span>50%</span><span>100%</span></div></div>
+        <!-- 각 게이지에 data-key와 data-label 속성 추가 -->
+        <div class="gauge" data-key="CLT_C" data-label="Coolant Temp"><div class="gauge-label">CLT1</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar0"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
+        <div class="gauge" data-key="OilTemp_C" data-label="Oil Temp"><div class="gauge-label">EOT IN</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar1"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
+        <div class="gauge" data-key="IAT_C" data-label="Intake Air Temp"><div class="gauge-label">IAT</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar2"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
+        <div class="gauge" data-key="FuelPressure_bar" data-label="Fuel Pressure"><div class="gauge-label">FUEL PRESS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar3"></div></div><div class="gauge-bar-labels"><span>0</span><span>5</span><span>10bar</span></div></div>
+        <div class="gauge" data-key="OilPressure_bar" data-label="Oil Pressure"><div class="gauge-label">OIL PRESS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar4"></div></div><div class="gauge-bar-labels"><span>0</span><span>5</span><span>10bar</span></div></div>
+        <div class="gauge" data-key="TPS_percent" data-label="Throttle Position"><div class="gauge-label">TPS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar5"></div></div><div class="gauge-bar-labels"><span>0%</span><span>50%</span><span>100%</span></div></div>
       </div>
 
       <div class="gear" id="gear">N</div>
@@ -236,10 +271,31 @@
     </div>
   </div>
 
+  <!-- 그래프 팝업용 모달 -->
+  <div class="modal-overlay" id="graph-modal">
+    <div class="modal-content">
+      <span class="modal-close" id="modal-close-btn">&times;</span>
+      <h3 id="chart-title">Sensor Graph</h3>
+      <canvas id="sensor-chart"></canvas>
+    </div>
+  </div>
+
   <!-- Firebase 연동 스크립트 -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
+    // --- 네비게이션 활성화 ---
+    document.addEventListener("DOMContentLoaded", () => {
+        const links = document.querySelectorAll('.page-nav a');
+        const currentPath = window.location.pathname.split('/').pop();
+        links.forEach(link => {
+            if (link.getAttribute('href').includes(currentPath)) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // --- Firebase 설정 ---
     const firebaseConfig = {
       apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
       authDomain: "emucanlogger.firebaseapp.com",
@@ -252,46 +308,129 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // All sensor data is now under a single path, updated frequently.
     const dataRef = db.ref("emu_realtime_data");
 
+    // --- UI 요소 및 데이터 ---
     const sensorMap = [
-        { key: 'CLT_C', bar: 'bar0', max: 130 },
-        { key: 'OilTemp_C', bar: 'bar1', max: 130 },
-        { key: 'IAT_C', bar: 'bar2', max: 130 },
-        { key: 'FuelPressure_bar', bar: 'bar3', max: 10 }, // Assuming max 10 bar
-        { key: 'OilPressure_bar', bar: 'bar4', max: 10 }, // Assuming max 10 bar
-        { key: 'TPS_percent', bar: 'bar5', max: 100 }
+        { key: 'CLT_C', bar: 'bar0', max: 130, label: 'Coolant Temp' },
+        { key: 'OilTemp_C', bar: 'bar1', max: 130, label: 'Oil Temp' },
+        { key: 'IAT_C', bar: 'bar2', max: 130, label: 'Intake Air Temp' },
+        { key: 'FuelPressure_bar', bar: 'bar3', max: 10, label: 'Fuel Pressure' },
+        { key: 'OilPressure_bar', bar: 'bar4', max: 10, label: 'Oil Pressure' },
+        { key: 'TPS_percent', bar: 'bar5', max: 100, label: 'Throttle Position' }
     ];
 
-    const bars = sensorMap.map(s => document.getElementById(s.bar));
-    const gearEl = document.getElementById("gear");
-    const rpmEl = document.getElementById("rpm");
-    const rpmBar = document.getElementById("rpmBar");
-    const speedEl = document.getElementById("speed");
+    const ui = {
+        bars: sensorMap.map(s => document.getElementById(s.bar)),
+        gear: document.getElementById("gear"),
+        rpm: document.getElementById("rpm"),
+        rpmBar: document.getElementById("rpmBar"),
+        speed: document.getElementById("speed"),
+        gauges: document.querySelectorAll('.gauge'),
+        modal: document.getElementById('graph-modal'),
+        modalCloseBtn: document.getElementById('modal-close-btn'),
+        chartTitle: document.getElementById('chart-title'),
+        chartCanvas: document.getElementById('sensor-chart').getContext('2d')
+    };
 
+    // --- 그래프 데이터 저장소 ---
+    const MAX_DATA_POINTS = 50;
+    const sensorHistory = {};
+    sensorMap.forEach(s => {
+        sensorHistory[s.key] = {
+            labels: [],
+            data: []
+        };
+    });
+
+    // --- 차트 인스턴스 ---
+    let sensorChart = new Chart(ui.chartCanvas, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Sensor Value',
+                data: [],
+                borderColor: '#3399ff',
+                backgroundColor: 'rgba(51, 153, 255, 0.2)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            scales: {
+                x: { ticks: { display: false } },
+                y: { beginAtZero: true }
+            },
+            animation: { duration: 200 }
+        }
+    });
+
+    // --- 데이터 업데이트 함수 ---
     function update(data) {
       if (!data) return;
 
+      // 게이지 UI 업데이트
       sensorMap.forEach((sensor, i) => {
         const val = Number(data[sensor.key]);
         if (!isNaN(val)) {
           const percent = Math.min(val / sensor.max * 100, 100);
-          bars[i].style.width = percent + '%';
-          bars[i].style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
+          ui.bars[i].style.width = percent + '%';
+          ui.bars[i].style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
         }
       });
 
-      rpmEl.textContent = (data.RPM ?? 0) + ' RPM';
-      gearEl.textContent = data.Gear ?? 'N';
-      speedEl.textContent = (data.VSS_kmh ?? 0) + ' km/h';
+      ui.rpm.textContent = (data.RPM ?? 0) + ' RPM';
+      ui.gear.textContent = data.Gear ?? 'N';
+      ui.speed.textContent = (data.VSS_kmh ?? 0) + ' km/h';
       const rpmPercent = Math.min((data.RPM ?? 0) / 13000 * 100, 100);
-      rpmBar.style.width = rpmPercent + '%';
-      rpmBar.style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
+      ui.rpmBar.style.width = rpmPercent + '%';
+      ui.rpmBar.style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
+
+      // 그래프용 데이터 기록
+      const now = new Date().toLocaleTimeString();
+      for (const key in sensorHistory) {
+          if (data[key] !== undefined) {
+              const history = sensorHistory[key];
+              history.labels.push(now);
+              history.data.push(data[key]);
+              if (history.data.length > MAX_DATA_POINTS) {
+                  history.labels.shift();
+                  history.data.shift();
+              }
+          }
+      }
     }
 
-    // Listen for any change in the entire data object
+    // --- 이벤트 리스너 ---
+    ui.gauges.forEach(gauge => {
+        gauge.addEventListener('click', () => {
+            const key = gauge.dataset.key;
+            const label = gauge.dataset.label;
+            const history = sensorHistory[key];
+
+            if (history) {
+                ui.chartTitle.textContent = `${label} History`;
+                sensorChart.data.labels = history.labels;
+                sensorChart.data.datasets[0].data = history.data;
+                sensorChart.data.datasets[0].label = label;
+                sensorChart.update();
+                ui.modal.style.display = 'flex';
+            }
+        });
+    });
+
+    ui.modalCloseBtn.addEventListener('click', () => {
+        ui.modal.style.display = 'none';
+    });
+    ui.modal.addEventListener('click', (e) => {
+        if (e.target === ui.modal) {
+            ui.modal.style.display = 'none';
+        }
+    });
+
+    // --- Firebase 데이터 수신 ---
     dataRef.on("value", (snapshot) => {
       const data = snapshot.val();
       update(data);
