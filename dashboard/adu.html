@@ -403,18 +403,20 @@
         dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
 
         // --- 세부 데이터 테이블 업데이트 ---
-        // 테이블의 모든 td 요소를 순회하며 업데이트
-        const allTds = ui.allDataTableBody.querySelectorAll('td[id]');
-        allTds.forEach(td => {
-            const key = td.id.replace('td-', '');
-            if (data.hasOwnProperty(key)) {
-                let value = data[key];
-                if (typeof value === 'number' && !Number.isInteger(value)) {
-                    value = value.toFixed(3).replace(/\.?0+$/, ''); // 불필요한 소수점 0 제거
+        // data 객체의 모든 키에 대해 반복하여 테이블 셀을 업데이트
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const element = document.getElementById(`td-${key}`);
+                if (element) {
+                    let value = data[key];
+                    // 숫자형 데이터는 소수점 자릿수 정리
+                    if (typeof value === 'number' && !Number.isInteger(value)) {
+                        value = value.toFixed(3).replace(/\.?0+$/, ''); // 불필요한 소수점 0 제거
+                    }
+                    element.textContent = value;
                 }
-                td.textContent = value;
             }
-        });
+        }
     }
 
     // --- Firebase 데이터 수신 ---
