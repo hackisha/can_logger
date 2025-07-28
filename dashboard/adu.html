@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 기본 스타일 --- */
         :root {
             --bg-color: #1a1a1a;
             --panel-color: #2c2c2c;
@@ -24,7 +23,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -37,18 +36,22 @@
             background-color: #000;
             border: 2px solid #333;
             border-radius: 10px;
-            padding: 20px;
+            padding: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         /* --- 탭 네비게이션 --- */
         nav {
             display: flex;
+            flex-wrap: wrap;
             border-bottom: 2px solid #333;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         nav a {
-            padding: 10px 20px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            padding: 10px;
             cursor: pointer;
             color: var(--text-color);
             text-decoration: none;
@@ -68,18 +71,18 @@
         #dashboard {
             display: grid;
             grid-template-columns: 150px 1fr 150px;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
             background-color: var(--panel-color);
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
         }
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
-        
+
         /* --- 게이지 바 스타일 --- */
         .gauge { width: 100%; }
         .gauge-label {
@@ -91,7 +94,7 @@
         }
         .gauge-bar-bg {
             width: 100%;
-            height: 20px;
+            height: 18px;
             background-color: var(--gauge-bg);
             border-radius: 4px;
             overflow: hidden;
@@ -99,7 +102,7 @@
         }
         .gauge-bar {
             height: 100%;
-            width: 0%; /* JS로 제어 */
+            width: 0%; /* JS 제어 */
             transition: width 0.2s ease-out;
             border-radius: 3px;
         }
@@ -107,7 +110,7 @@
             background: linear-gradient(to right, var(--temp-low), var(--temp-high));
         }
         #fuel-press-bar, #oil-press-bar {
-             background-color: var(--accent-yellow);
+            background-color: var(--accent-yellow);
         }
 
         /* --- 중앙 디스플레이 --- */
@@ -116,13 +119,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
             gap: 10px;
         }
         #gear-display {
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
-            font-size: 15vw;
+            font-size: 14vw;
             line-height: 1;
             color: var(--accent-yellow);
             text-shadow: 0 0 15px rgba(255, 195, 0, 0.5);
@@ -131,12 +133,8 @@
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
             font-size: 6vw;
-            line-height: 1;
         }
-        #rpm-display {
-            width: 100%;
-            text-align: center;
-        }
+        #rpm-display { width: 100%; text-align: center; }
         #rpm-value {
             font-family: 'Orbitron', sans-serif;
             font-size: 2.5vw;
@@ -158,49 +156,41 @@
             background-color: var(--accent-yellow);
             transition: width 0.1s linear, background-color 0.1s linear;
         }
-        @media (min-width: 900px) {
-            #gear-display { font-size: 135px; }
-            #speed-display { font-size: 54px; }
-            #rpm-value { font-size: 22px; }
-        }
 
         /* --- 하단 정보 --- */
         .bottom-info {
             grid-column: 1 / 4;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             margin-top: 15px;
-            padding: 10px 20px;
+            padding: 10px;
             background-color: #111;
             border-radius: 5px;
         }
         .info-item {
             font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 500;
         }
-        .indicators {
-            display: flex;
-            gap: 15px;
-        }
+        .indicators { display: flex; gap: 10px; }
         .indicator svg {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             fill: #555;
             transition: fill 0.3s;
         }
-        .indicator.active svg {
-            fill: var(--warning-red);
-        }
+        .indicator.active svg { fill: var(--warning-red); }
 
         /* --- 세부 데이터 테이블 --- */
         #all-data table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 14px;
         }
         #all-data th, #all-data td {
-            padding: 12px;
+            padding: 8px;
             border: 1px solid #444;
             text-align: left;
         }
@@ -213,10 +203,21 @@
             color: var(--accent-yellow);
             width: 30%;
         }
+
+        /* === 반응형 디자인 === */
+        @media (max-width: 768px) {
+            #dashboard {
+                grid-template-columns: 1fr; /* 1열로 변경 */
+            }
+            .center-display { order: -1; } /* 기어와 속도를 위로 */
+            #gear-display { font-size: 22vw; }
+            #speed-display { font-size: 10vw; }
+            #rpm-value { font-size: 6vw; }
+            .bottom-info { flex-direction: column; gap: 10px; }
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
     <nav>
         <a href="#" class="tab-link active" data-tab="dashboard">ADU Dashboard</a>
@@ -242,9 +243,7 @@
             <div id="speed-display">0 km/h</div>
             <div id="rpm-display">
                 <div id="rpm-value">0 RPM</div>
-                <div id="rpm-bar-bg">
-                    <div id="rpm-bar"></div>
-                </div>
+                <div id="rpm-bar-bg"><div id="rpm-bar"></div></div>
             </div>
         </div>
 
@@ -262,14 +261,10 @@
         <div class="bottom-info">
              <div class="indicators">
                 <div class="indicator" id="cel-indicator" title="Check Engine Light">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2L22 21H2L12 2M11 10V14H13V10H11M11 16V18H13V16H11Z" />
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 2L22 21H2L12 2M11 10V14H13V10H11M11 16V18H13V16H11Z"/></svg>
                 </div>
                 <div class="indicator" id="batt-indicator" title="Low Battery">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M16.5,4H15V2H9V4H7.5A1.5,1.5 0 0,0 6,5.5V20.5A1.5,1.5 0 0,0 7.5,22H16.5A1.5,1.5 0 0,0 18,20.5V5.5A1.5,1.5 0 0,0 16.5,4M13,18H11V16H13V18M13,14H11V9H13V14Z" />
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M16.5,4H15V2H9V4H7.5A1.5,1.5 0 0,0 6,5.5V20.5A1.5,1.5 0 0,0 7.5,22H16.5A1.5,1.5 0 0,0 18,20.5V5.5A1.5,1.5 0 0,0 16.5,4M13,18H11V16H13V18M13,14H11V9H13V14Z"/></svg>
                 </div>
              </div>
              <div class="info-item" id="ecu-brand">무한질주</div>
@@ -279,12 +274,8 @@
 
     <div id="all-data" class="tab-content">
         <table>
-            <thead>
-                <tr><th>Parameter</th><th>Value</th></tr>
-            </thead>
-            <tbody>
-                <!-- Data will be populated by JavaScript -->
-            </tbody>
+            <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+            <tbody></tbody>
         </table>
     </div>
 </div>
@@ -292,9 +283,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
 <script>
-    // --- Firebase 설정 ---
     const firebaseConfig = {
       apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
       authDomain: "emucanlogger.firebaseapp.com",
@@ -308,13 +297,11 @@
     const db = firebase.database();
     const dataRef = db.ref("emu_realtime_data");
 
-    // --- 상수 정의 ---
     const MAX_RPM = 8000;
     const RPM_REDLINE_START = 7000;
     const TEMP_MIN = -40;
     const TEMP_MAX = 250;
 
-    // --- UI 요소 캐싱 ---
     const ui = {
         tabs: {
             links: document.querySelectorAll('.tab-link'),
@@ -340,42 +327,33 @@
         allDataTableBody: document.querySelector('#all-data tbody')
     };
 
-    // --- 탭 전환 로직 ---
     ui.tabs.links.forEach(link => {
         link.addEventListener('click', e => {
             const targetTab = e.target.getAttribute('data-tab');
             if (!targetTab) return;
             e.preventDefault();
-
             ui.tabs.links.forEach(l => l.classList.remove('active'));
             ui.tabs.contents.forEach(c => c.classList.remove('active'));
-            
             e.target.classList.add('active');
             document.getElementById(targetTab).classList.add('active');
         });
     });
 
-    // --- 데이터 UI 업데이트 함수 ---
     function updateUI(data) {
         if (!data) return;
-
         const rpm = data.RPM || 0;
         const rpmPercent = Math.min(rpm / MAX_RPM, 1) * 100;
-
         const dash = ui.dashboard;
-        
+
         dash.gear.textContent = data.Gear || 'N';
         dash.speed.textContent = `${data.VSS_kmh || 0} km/h`;
-        
-        // RPM
         dash.rpmValue.textContent = `${rpm} RPM`;
         dash.rpmBar.style.width = `${rpmPercent}%`;
         dash.rpmBar.style.backgroundColor = (rpm > RPM_REDLINE_START) ? 'var(--warning-red)' : 'var(--accent-yellow)';
 
-        // --- 온도 게이지 보정 (-40 ~ 250°C) ---
         const normalizeTemp = (value) => {
             let percent = (value - TEMP_MIN) / (TEMP_MAX - TEMP_MIN);
-            percent = Math.min(Math.max(percent, 0), 1); // 0~1 범위 제한
+            percent = Math.min(Math.max(percent, 0), 1);
             return percent * 100;
         };
 
@@ -387,7 +365,6 @@
         dash.oilTempBar.style.width = `${normalizeTemp(oilTemp)}%`;
         dash.oilTempValue.textContent = `${oilTemp}°C`;
 
-        // 압력 게이지 (Oil: 0-8bar, Fuel: 0-6bar)
         const oilPress = data.OilPressure_bar || 0;
         dash.oilPressBar.style.width = `${Math.min((oilPress / 8) * 100, 100)}%`;
         dash.oilPressValue.textContent = `${oilPress.toFixed(1)} bar`;
@@ -396,14 +373,10 @@
         dash.fuelPressBar.style.width = `${Math.min((fuelPress / 6) * 100, 100)}%`;
         dash.fuelPressValue.textContent = `${fuelPress.toFixed(1)} bar`;
 
-        // TPS
         dash.tpsValue.textContent = `TPS: ${data.TPS_percent || 0}%`;
-
-        // 경고등
         dash.celIndicator.classList.toggle('active', data.CEL_Error != 0);
         dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
 
-        // 세부 데이터 테이블
         let tableHtml = '';
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -417,7 +390,6 @@
         ui.allDataTableBody.innerHTML = tableHtml;
     }
 
-    // --- Firebase 데이터 수신 ---
     dataRef.on('value', (snapshot) => {
         const data = snapshot.val();
         updateUI(data);
@@ -425,6 +397,5 @@
         console.error("Firebase read failed: " + error.code);
     });
 </script>
-
 </body>
 </html>
