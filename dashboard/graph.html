@@ -54,9 +54,38 @@
       border-radius: 12px;
       padding: 8px;
     }
+    .page-nav {
+      width: 960px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .page-nav a {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 16px;
+      color: #a0c8ff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border: 1px solid #4a4a4a;
+      border-radius: 10px;
+      background: #2c2c2c;
+      transition: all 0.3s ease;
+    }
+    .page-nav a:hover, .page-nav a.active {
+      background: #0077ff;
+      color: #fff;
+      border-color: #00aaff;
+      box-shadow: 0 0 10px #00aaff;
+    }
   </style>
 </head>
 <body>
+  <div class="page-nav">
+    <a href="./dashboard.html">Main Dashboard</a>
+    <a href="./graph.html" class="active">Graph</a>
+    <a href="./adu.html">ADU</a>
+  </div>
   <div class="dashboard">
     <div class="sensor-box"><div class="sensor-title">CLT</div><canvas id="cltChart"></canvas></div>
     <div class="sensor-box"><div class="sensor-title">EOT IN</div><canvas id="eotInChart"></canvas></div>

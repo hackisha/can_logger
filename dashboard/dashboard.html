@@ -176,6 +176,28 @@
       box-shadow: 0 0 20px #4c88ff55;
       user-select: none;
     }
+    .page-nav {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+    }
+    .page-nav a {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 16px;
+      color: #a0c8ff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border: 1px solid #4a4a4a;
+      border-radius: 10px;
+      background: #2c2c2c;
+      transition: all 0.3s ease;
+    }
+    .page-nav a:hover, .page-nav a.active {
+      background: #0077ff;
+      color: #fff;
+      border-color: #00aaff;
+      box-shadow: 0 0 10px #00aaff;
+    }
   </style>
 </head>
 <body>
@@ -200,6 +222,11 @@
         <span>12000</span><span>13000</span>
       </div>
       <div class="speed-display" id="speed">0 km/h</div>
+      <nav class="page-nav">
+        <a href="./dashboard.html" class="active">Main Dashboard</a>
+        <a href="./graph.html">Graph</a>
+        <a href="./adu.html">ADU</a>
+      </nav>
       <div class="tagline-banner">무한질주</div>
     </div>
   </div>
