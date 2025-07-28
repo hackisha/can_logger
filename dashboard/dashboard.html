@@ -1,191 +1,300 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무한질주 대시보드</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Leaflet.js (지도) 라이브러리 추가 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
-    :root {
-      --bg-gradient: linear-gradient(135deg, #5a5a5a, #2f2f2f);
-      --center-bg: linear-gradient(145deg, #3a3a3a, #222222);
-      --gauge-bg: #11223b;
-      --gauge-hover: #16345e;
-      --text-primary: #a0c8ff;
-      --text-secondary: #aad6ff;
-      --accent-color: #3399ff;
-    }
-    body {
-      margin: 0;
-      background: var(--bg-gradient);
-      color: var(--text-primary);
-      font-family: 'Roboto Mono', monospace, 'Segoe UI', sans-serif;
-      overflow-x: hidden;
-    }
-    .page-nav {
-      width: 100%;
-      background-color: #2c2c2c;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      padding: 10px 0;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-    .page-nav a {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 16px;
-      color: var(--text-primary);
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-    .page-nav a:hover, .page-nav a.active {
-      background: #0077ff;
-      color: #fff;
-    }
-    .dashboard-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .center-section {
-      position: relative;
-      width: 100%;
-      max-width: 1000px;
-      background: var(--center-bg);
-      border-radius: 20px;
-      border: 1.5px solid #4a4a4a;
-      padding: 30px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-sizing: border-box;
-    }
-    .gauges-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      width: 100%;
-      margin-bottom: 30px;
-    }
-    .gauge {
-      background: var(--gauge-bg);
-      border-radius: 15px;
-      padding: 15px 20px;
-      box-shadow: 0 0 10px rgba(0, 123, 255, 0.7), inset 0 0 8px rgba(0, 123, 255, 0.3);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 1px solid #2050c7;
-      transition: background 0.3s ease;
-      cursor: pointer;
-    }
-    .gauge:hover { background: var(--gauge-hover); }
-    .gauge-label { font-weight: 700; font-size: 16px; color: #9bcfff; margin-bottom: 10px; letter-spacing: 1px; }
-    .gauge-bar-container { width: 100%; height: 10px; background: #203958; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 5px #144172; position: relative; }
-    .gauge-bar { height: 100%; width: 0; border-radius: 8px; transition: width 0.4s ease, background 0.4s ease; }
-    .gauge-bar-labels { width: 100%; display: flex; justify-content: space-between; font-size: 11px; color: #5588cc; margin-top: 6px; user-select: none; }
-    .gear { font-size: 110px; font-weight: 800; color: var(--accent-color); margin-bottom: 18px; text-shadow: 0 0 15px #3399ffaa; }
-    .rpm { font-size: 48px; font-weight: 600; color: var(--text-secondary); margin-bottom: 25px; letter-spacing: 1.2px; text-shadow: 0 0 6px #5da6ffbb; }
-    .rpm-bar-container { width: 100%; max-width: 600px; height: 24px; background: #1b3761; border-radius: 14px; overflow: hidden; box-shadow: inset 0 0 6px #2a5ab1; margin-bottom: 18px; }
-    .rpm-bar { height: 100%; width: 0; border-radius: 14px; transition: width 0.3s ease; }
-    .rpm-labels { width: 100%; max-width: 600px; display: flex; justify-content: space-between; font-size: 12px; color: #7ea6d6; margin-bottom: 28px; user-select: none; }
-    .speed-display { font-size: 40px; font-weight: 700; background: #444b54; color: #d0d4d9; padding: 14px 28px; border-radius: 16px; box-shadow: 0 0 16px #a6acb1bb, inset 0 0 12px #6c737a; letter-spacing: 2px; user-select: none; margin-top: 20px; }
-    .tagline-banner { margin-top: 14px; background: rgba(50, 105, 185, 0.3); color: #cde4ff; font-size: 22px; font-weight: 400; padding: 14px 36px; border-radius: 20px; backdrop-filter: blur(8px); border: 1.5px solid rgba(80, 135, 225, 0.5); letter-spacing: 3px; box-shadow: 0 0 20px #4c88ff55; user-select: none; }
-    
-    /* --- 지도 스타일 --- */
-    #map-container {
-        width: 100%;
-        max-width: 1000px;
-        margin-top: 20px;
-        border-radius: 20px;
-        overflow: hidden;
-        border: 1.5px solid #4a4a4a;
-    }
-    #map { height: 400px; background-color: #333; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECU Master - Realtime Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 기본 스타일 --- */
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-color: #2c2c2c;
+            --text-color: #e0e0e0;
+            --accent-yellow: #ffc300;
+            --gauge-bg: #444;
+            --temp-low: #4a90e2;
+            --temp-high: #d9534f;
+            --warning-red: #e74c3c;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #000;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
 
-    /* --- 그래프 팝업 스타일 --- */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
-    .modal-content { background: #2c2c2c; padding: 20px; border-radius: 10px; width: 90%; max-width: 800px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; }
-    .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #fff; cursor: pointer; }
-    #chart-title { color: #fff; text-align: center; margin-bottom: 15px; font-size: 20px; }
+        /* --- 탭 네비게이션 --- */
+        nav {
+            display: flex;
+            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+        }
+        nav a {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        nav a.active {
+            color: var(--accent-yellow);
+            border-bottom-color: var(--accent-yellow);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-    /* --- 반응형 디자인 --- */
-    @media (max-width: 768px) {
-      .center-section { padding: 20px; }
-      .gauges-grid { grid-template-columns: repeat(2, 1fr); }
-      .gear { font-size: 80px; }
-      .rpm { font-size: 36px; }
-      .speed-display { font-size: 32px; padding: 12px 24px; }
-      .tagline-banner { font-size: 18px; }
-    }
-    @media (max-width: 480px) {
-      .gauges-grid { grid-template-columns: 1fr; }
-      .gear { font-size: 60px; }
-      .rpm { font-size: 28px; }
-      .speed-display { font-size: 24px; padding: 10px 20px; }
-      .page-nav a { font-size: 14px; padding: 6px 10px; }
-    }
-  </style>
+        /* --- 대시보드 스타일 --- */
+        #dashboard {
+            display: grid;
+            grid-template-columns: 150px 1fr 150px;
+            gap: 20px;
+            align-items: center;
+            background-color: var(--panel-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* --- 게이지 바 스타일 --- */
+        .gauge { width: 100%; }
+        .gauge-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .gauge-bar-bg {
+            width: 100%;
+            height: 20px;
+            background-color: var(--gauge-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #111;
+        }
+        .gauge-bar {
+            height: 100%;
+            width: 0%; /* JS로 제어 */
+            transition: width 0.2s ease-out;
+            border-radius: 3px;
+        }
+        #water-temp-bar, #oil-temp-bar {
+            background: linear-gradient(to right, var(--temp-low), var(--temp-high));
+        }
+        #fuel-level-bar, #oil-press-bar {
+             background-color: var(--accent-yellow);
+        }
+
+        /* --- 중앙 디스플레이 (타코미터 대체) --- */
+        .center-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 10px;
+        }
+        #gear-display {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 15vw;
+            line-height: 1;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 15px rgba(255, 195, 0, 0.5);
+        }
+        #speed-display {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 6vw;
+            line-height: 1;
+        }
+        #rpm-display {
+            width: 100%;
+            text-align: center;
+        }
+        #rpm-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5vw;
+            font-weight: 500;
+        }
+        #rpm-bar-bg {
+            width: 100%;
+            height: 25px;
+            background-color: var(--gauge-bg);
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+            border: 1px solid #111;
+        }
+        #rpm-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            background-color: var(--accent-yellow);
+            transition: width 0.1s linear, background-color 0.1s linear;
+        }
+        @media (min-width: 900px) { /* 최대 크기 고정 */
+            #gear-display { font-size: 135px; }
+            #speed-display { font-size: 54px; }
+            #rpm-value { font-size: 22px; }
+        }
+
+        /* --- 하단 정보 --- */
+        .bottom-info {
+            grid-column: 1 / 4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #111;
+            border-radius: 5px;
+        }
+        .info-item {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .indicators {
+            display: flex;
+            gap: 15px;
+        }
+        .indicator svg {
+            width: 30px;
+            height: 30px;
+            fill: #555; /* 비활성 상태 */
+            transition: fill 0.3s;
+        }
+        .indicator.active svg {
+            fill: var(--warning-red); /* 활성 상태 */
+        }
+
+        /* --- 세부 데이터 테이블 --- */
+        #all-data table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #all-data th, #all-data td {
+            padding: 12px;
+            border: 1px solid #444;
+            text-align: left;
+        }
+        #all-data th {
+            background-color: #333;
+            font-family: 'Orbitron', sans-serif;
+        }
+        #all-data td:nth-child(2) {
+            font-weight: bold;
+            color: var(--accent-yellow);
+            width: 30%;
+        }
+    </style>
 </head>
 <body>
-  <nav class="page-nav">
-    <a href="./dashboard.html">Main Dashboard</a>
-    <a href="./graph.html">Graph</a>
-    <a href="./adu.html">ADU</a>
-  </nav>
 
-  <div class="dashboard-container">
-    <div class="center-section">
-      <div class="gauges-grid">
-        <div class="gauge" data-key="CLT_C" data-label="Coolant Temp"><div class="gauge-label">CLT1</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar0"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge" data-key="OilTemp_C" data-label="Oil Temp"><div class="gauge-label">EOT IN</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar1"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge" data-key="IAT_C" data-label="Intake Air Temp"><div class="gauge-label">IAT</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar2"></div></div><div class="gauge-bar-labels"><span>0°</span><span>70°</span><span>130°</span></div></div>
-        <div class="gauge" data-key="FuelPressure_bar" data-label="Fuel Pressure"><div class="gauge-label">FUEL PRESS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar3"></div></div><div class="gauge-bar-labels"><span>0</span><span>5</span><span>10bar</span></div></div>
-        <div class="gauge" data-key="OilPressure_bar" data-label="Oil Pressure"><div class="gauge-label">OIL PRESS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar4"></div></div><div class="gauge-bar-labels"><span>0</span><span>5</span><span>10bar</span></div></div>
-        <div class="gauge" data-key="TPS_percent" data-label="Throttle Position"><div class="gauge-label">TPS</div><div class="gauge-bar-container"><div class="gauge-bar" id="bar5"></div></div><div class="gauge-bar-labels"><span>0%</span><span>50%</span><span>100%</span></div></div>
-      </div>
-      <div class="gear" id="gear">N</div>
-      <div class="rpm" id="rpm">0 RPM</div>
-      <div class="rpm-bar-container"><div class="rpm-bar" id="rpmBar"></div></div>
-      <div class="rpm-labels">
-        <span>0</span><span>1k</span><span>2k</span><span>3k</span><span>4k</span><span>5k</span><span>6k</span><span>7k</span><span>8k</span><span>9k</span><span>10k</span><span>11k</span><span>12k</span><span>13k</span>
-      </div>
-      <div class="speed-display" id="speed">0 km/h</div>
-      <div class="tagline-banner">무한질주</div>
+<div class="container">
+    <nav>
+        <a href="#" class="tab-link active" data-tab="dashboard">ADU Dashboard</a>
+        <a href="#" class="tab-link" data-tab="all-data">All Sensors Data</a>
+        <a href="./dashboard.html">Main Dashboard</a>
+        <a href="./graph.html">Graph</a>
+    </nav>
+
+    <div id="dashboard" class="tab-content active">
+        <div class="side-panel">
+            <div class="gauge">
+                <div class="gauge-label"><span>WATER TEMP</span><span id="water-temp-value">...</span></div>
+                <div class="gauge-bar-bg"><div class="gauge-bar" id="water-temp-bar"></div></div>
+            </div>
+            <div class="gauge">
+                <div class="gauge-label"><span>FUEL PRESS</span><span id="fuel-press-value">...</span></div>
+                <div class="gauge-bar-bg"><div class="gauge-bar" id="fuel-press-bar"></div></div>
+            </div>
+        </div>
+
+        <div class="center-display">
+            <div id="gear-display">N</div>
+            <div id="speed-display">0 km/h</div>
+            <div id="rpm-display">
+                <div id="rpm-value">0 RPM</div>
+                <div id="rpm-bar-bg">
+                    <div id="rpm-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="gauge">
+                <div class="gauge-label"><span>OIL TEMP</span><span id="oil-temp-value">...</span></div>
+                <div class="gauge-bar-bg"><div class="gauge-bar" id="oil-temp-bar"></div></div>
+            </div>
+            <div class="gauge">
+                <div class="gauge-label"><span>OIL PRESS</span><span id="oil-press-value">...</span></div>
+                <div class="gauge-bar-bg"><div class="gauge-bar" id="oil-press-bar"></div></div>
+            </div>
+        </div>
+
+        <div class="bottom-info">
+             <div class="indicators">
+                <div class="indicator" id="cel-indicator" title="Check Engine Light">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L22 21H2L12 2M11 10V14H13V10H11M11 16V18H13V16H11Z" />
+                    </svg>
+                </div>
+                <div class="indicator" id="batt-indicator" title="Low Battery">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16.5,4H15V2H9V4H7.5A1.5,1.5 0 0,0 6,5.5V20.5A1.5,1.5 0 0,0 7.5,22H16.5A1.5,1.5 0 0,0 18,20.5V5.5A1.5,1.5 0 0,0 16.5,4M13,18H11V16H13V18M13,14H11V9H13V14Z" />
+                    </svg>
+                </div>
+             </div>
+             <div class="info-item" id="ecu-brand">무한질주</div>
+             <div class="info-item" id="tps-value">TPS: 0%</div>
+        </div>
     </div>
-    <div id="map-container"><div id="map"></div></div>
-  </div>
 
-  <div class="modal-overlay" id="graph-modal">
-    <div class="modal-content">
-      <span class="modal-close" id="modal-close-btn">&times;</span>
-      <h3 id="chart-title">Sensor Graph</h3>
-      <canvas id="sensor-chart"></canvas>
+    <div id="all-data" class="tab-content">
+        <table>
+            <thead>
+                <tr><th>Parameter</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated by JavaScript -->
+            </tbody>
+        </table>
     </div>
-  </div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const links = document.querySelectorAll('.page-nav a');
-        const currentPath = window.location.pathname.split('/').pop();
-        links.forEach(link => {
-            if (link.getAttribute('href').includes(currentPath)) {
-                link.classList.add('active');
-            }
-        });
-    });
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
+<script>
+    // --- Firebase 설정 ---
     const firebaseConfig = {
       apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
       authDomain: "emucanlogger.firebaseapp.com",
@@ -195,118 +304,121 @@
       messagingSenderId: "289716936070",
       appId: "1:289716936070:web:8502e0f2c69ae362616007"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const dataRef = db.ref("emu_realtime_data");
 
-    const sensorMap = [
-        { key: 'CLT_C', bar: 'bar0', max: 130, label: 'Coolant Temp' },
-        { key: 'OilTemp_C', bar: 'bar1', max: 130, label: 'Oil Temp' },
-        { key: 'IAT_C', bar: 'bar2', max: 130, label: 'Intake Air Temp' },
-        { key: 'FuelPressure_bar', bar: 'bar3', max: 10, label: 'Fuel Pressure' },
-        { key: 'OilPressure_bar', bar: 'bar4', max: 10, label: 'Oil Pressure' },
-        { key: 'TPS_percent', bar: 'bar5', max: 100, label: 'Throttle Position' }
-    ];
+    // --- 상수 정의 ---
+    const MAX_RPM = 8000;
+    const RPM_REDLINE_START = 7000;
 
+    // --- UI 요소 캐싱 ---
     const ui = {
-        bars: sensorMap.map(s => document.getElementById(s.bar)),
-        gear: document.getElementById("gear"),
-        rpm: document.getElementById("rpm"),
-        rpmBar: document.getElementById("rpmBar"),
-        speed: document.getElementById("speed"),
-        gauges: document.querySelectorAll('.gauge'),
-        modal: document.getElementById('graph-modal'),
-        modalCloseBtn: document.getElementById('modal-close-btn'),
-        chartTitle: document.getElementById('chart-title'),
-        chartCanvas: document.getElementById('sensor-chart').getContext('2d')
+        tabs: {
+            links: document.querySelectorAll('.tab-link'),
+            contents: document.querySelectorAll('.tab-content')
+        },
+        dashboard: {
+            gear: document.getElementById('gear-display'),
+            speed: document.getElementById('speed-display'),
+            rpmValue: document.getElementById('rpm-value'),
+            rpmBar: document.getElementById('rpm-bar'),
+            waterTempValue: document.getElementById('water-temp-value'),
+            waterTempBar: document.getElementById('water-temp-bar'),
+            oilTempValue: document.getElementById('oil-temp-value'),
+            oilTempBar: document.getElementById('oil-temp-bar'),
+            oilPressValue: document.getElementById('oil-press-value'),
+            oilPressBar: document.getElementById('oil-press-bar'),
+            fuelPressValue: document.getElementById('fuel-press-value'),
+            fuelPressBar: document.getElementById('fuel-press-bar'),
+            tpsValue: document.getElementById('tps-value'),
+            celIndicator: document.getElementById('cel-indicator'),
+            battIndicator: document.getElementById('batt-indicator')
+        },
+        allDataTableBody: document.querySelector('#all-data tbody')
     };
 
-    const MAX_DATA_POINTS = 50;
-    const sensorHistory = {};
-    sensorMap.forEach(s => {
-        sensorHistory[s.key] = { labels: [], data: [] };
-    });
+    // --- 탭 전환 로직 (내부 탭) ---
+    ui.tabs.links.forEach(link => {
+        link.addEventListener('click', e => {
+            const targetTab = e.target.getAttribute('data-tab');
+            if (!targetTab) return; // 외부 링크는 무시
+            e.preventDefault();
 
-    let sensorChart = new Chart(ui.chartCanvas, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Sensor Value', data: [], borderColor: '#3399ff', backgroundColor: 'rgba(51, 153, 255, 0.2)', borderWidth: 2, tension: 0.3, fill: true }] },
-        options: { scales: { x: { ticks: { display: false } }, y: { beginAtZero: true } }, animation: { duration: 200 } }
-    });
-
-    // --- 지도 초기화 ---
-    const map = L.map('map').setView([37.5665, 126.9780], 16); // 서울을 기본 위치로 설정
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-    let carMarker = null;
-    let carPath = L.polyline([], {color: 'red'}).addTo(map);
-
-    function update(data) {
-      if (!data) return;
-      sensorMap.forEach((sensor, i) => {
-        const val = Number(data[sensor.key]);
-        if (!isNaN(val)) {
-          const percent = Math.min(val / sensor.max * 100, 100);
-          ui.bars[i].style.width = percent + '%';
-          ui.bars[i].style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
-        }
-      });
-      ui.rpm.textContent = (data.RPM ?? 0) + ' RPM';
-      ui.gear.textContent = data.Gear ?? 'N';
-      ui.speed.textContent = (data.VSS_kmh ?? 0) + ' km/h';
-      const rpmPercent = Math.min((data.RPM ?? 0) / 13000 * 100, 100);
-      ui.rpmBar.style.width = rpmPercent + '%';
-      ui.rpmBar.style.background = `linear-gradient(to right, #0077ff, #ff4f4f)`;
-
-      const now = new Date().toLocaleTimeString();
-      for (const key in sensorHistory) {
-          if (data[key] !== undefined) {
-              const history = sensorHistory[key];
-              history.labels.push(now);
-              history.data.push(data[key]);
-              if (history.data.length > MAX_DATA_POINTS) {
-                  history.labels.shift();
-                  history.data.shift();
-              }
-          }
-      }
-
-      // --- 지도 업데이트 ---
-      if (data.lat && data.lon) {
-        const newLatLng = [data.lat, data.lon];
-        carPath.addLatLng(newLatLng);
-        map.setView(newLatLng, map.getZoom());
-        if (!carMarker) {
-            carMarker = L.marker(newLatLng).addTo(map);
-        } else {
-            carMarker.setLatLng(newLatLng);
-        }
-      }
-    }
-
-    ui.gauges.forEach(gauge => {
-        gauge.addEventListener('click', () => {
-            const key = gauge.dataset.key;
-            const label = gauge.dataset.label;
-            const history = sensorHistory[key];
-            if (history) {
-                ui.chartTitle.textContent = `${label} History`;
-                sensorChart.data.labels = history.labels;
-                sensorChart.data.datasets[0].data = history.data;
-                sensorChart.data.datasets[0].label = label;
-                sensorChart.update();
-                ui.modal.style.display = 'flex';
-            }
+            ui.tabs.links.forEach(l => l.classList.remove('active'));
+            ui.tabs.contents.forEach(c => c.classList.remove('active'));
+            
+            e.target.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
         });
     });
-    ui.modalCloseBtn.addEventListener('click', () => { ui.modal.style.display = 'none'; });
-    ui.modal.addEventListener('click', (e) => { if (e.target === ui.modal) { ui.modal.style.display = 'none'; } });
 
-    dataRef.on("value", (snapshot) => {
-      const data = snapshot.val();
-      update(data);
+    // --- 데이터 UI 업데이트 함수 ---
+    function updateUI(data) {
+        if (!data) return; // 데이터가 없으면 중단
+
+        const rpm = data.RPM || 0;
+        const rpmPercent = Math.min(rpm / MAX_RPM, 1) * 100;
+
+        // --- 대시보드 업데이트 ---
+        const dash = ui.dashboard;
+        
+        dash.gear.textContent = data.Gear || 'N';
+        dash.speed.textContent = `${data.VSS_kmh || 0} km/h`;
+        
+        // RPM
+        dash.rpmValue.textContent = `${rpm} RPM`;
+        dash.rpmBar.style.width = `${rpmPercent}%`;
+        dash.rpmBar.style.backgroundColor = (rpm > RPM_REDLINE_START) ? 'var(--warning-red)' : 'var(--accent-yellow)';
+
+        // 온도 게이지 (Water: 0-120°C, Oil: 0-140°C)
+        const waterTemp = data.CLT_C || 0;
+        dash.waterTempBar.style.width = `${Math.min((waterTemp / 120) * 100, 100)}%`;
+        dash.waterTempValue.textContent = `${waterTemp}°C`;
+
+        const oilTemp = data.OilTemp_C || 0;
+        dash.oilTempBar.style.width = `${Math.min((oilTemp / 140) * 100, 100)}%`;
+        dash.oilTempValue.textContent = `${oilTemp}°C`;
+
+        // 압력 게이지 (Oil: 0-8bar, Fuel: 0-6bar)
+        const oilPress = data.OilPressure_bar || 0;
+        dash.oilPressBar.style.width = `${Math.min((oilPress / 8) * 100, 100)}%`;
+        dash.oilPressValue.textContent = `${oilPress.toFixed(1)} bar`;
+
+        const fuelPress = data.FuelPressure_bar || 0;
+        dash.fuelPressBar.style.width = `${Math.min((fuelPress / 6) * 100, 100)}%`;
+        dash.fuelPressValue.textContent = `${fuelPress.toFixed(1)} bar`;
+
+        // TPS
+        dash.tpsValue.textContent = `TPS: ${data.TPS_percent || 0}%`;
+
+        // 경고등
+        dash.celIndicator.classList.toggle('active', data.CEL_Error != 0);
+        dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
+
+        // --- 세부 데이터 테이블 동적 업데이트 ---
+        let tableHtml = '';
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                let value = data[key];
+                if (typeof value === 'number' && !Number.isInteger(value)) {
+                    // 유효 숫자를 고려하여 소수점 자릿수 조정
+                    value = parseFloat(value.toFixed(3));
+                }
+                tableHtml += `<tr><td>${key}</td><td>${value}</td></tr>`;
+            }
+        }
+        ui.allDataTableBody.innerHTML = tableHtml;
+    }
+
+    // --- Firebase 데이터 수신 ---
+    dataRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        updateUI(data);
+    }, (error) => {
+        console.error("Firebase read failed: " + error.code);
     });
-  </script>
+</script>
+
 </body>
 </html>
