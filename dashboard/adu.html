@@ -261,7 +261,16 @@
 
         <div class="bottom-info">
              <div class="indicators">
-                <!-- Indicators removed -->
+                <div class="indicator" id="cel-indicator" title="Check Engine Light">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L22 21H2L12 2M11 10V14H13V10H11M11 16V18H13V16H11Z" />
+                    </svg>
+                </div>
+                <div class="indicator" id="batt-indicator" title="Low Battery">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16.5,4H15V2H9V4H7.5A1.5,1.5 0 0,0 6,5.5V20.5A1.5,1.5 0 0,0 7.5,22H16.5A1.5,1.5 0 0,0 18,20.5V5.5A1.5,1.5 0 0,0 16.5,4M13,18H11V16H13V18M13,14H11V9H13V14Z" />
+                    </svg>
+                </div>
              </div>
              <div class="info-item" id="ecu-brand">무한질주</div>
              <div class="info-item" id="tps-value">TPS: 0%</div>
@@ -274,22 +283,7 @@
                 <tr><th>Parameter</th><th>Value</th></tr>
             </thead>
             <tbody>
-                <tr><td>RPM</td><td id="td-RPM">0</td></tr>
-                <tr><td>TPS (%)</td><td id="td-TPS_percent">0.0</td></tr>
-                <tr><td>MAP (kPa)</td><td id="td-MAP_kPa">0</td></tr>
-                <tr><td>Coolant Temp (°C)</td><td id="td-CLT_C">0</td></tr>
-                <tr><td>Intake Air Temp (°C)</td><td id="td-IAT_C">0</td></tr>
-                <tr><td>Vehicle Speed (km/h)</td><td id="td-VSS_kmh">0</td></tr>
-                <tr><td>Gear</td><td id="td-Gear">0</td></tr>
-                <tr><td>Battery (V)</td><td id="td-Batt_V">0.00</td></tr>
-                <tr><td>Oil Temp (°C)</td><td id="td-OilTemp_C">0</td></tr>
-                <tr><td>Oil Pressure (bar)</td><td id="td-OilPressure_bar">0.00</td></tr>
-                <tr><td>Fuel Pressure (bar)</td><td id="td-FuelPressure_bar">0.00</td></tr>
-                <tr><td>Lambda</td><td id="td-WBO_Lambda">0.000</td></tr>
-                <tr><td>Ignition Angle (deg)</td><td id="td-IgnAngle_deg">0.0</td></tr>
-                <tr><td>Pulse Width (ms)</td><td id="td-PulseWidth_ms">0.000</td></tr>
-                <tr><td>Check Engine Light Error</td><td id="td-CEL_Error">0</td></tr>
-                <tr><td>Timestamp</td><td id="td-Timestamp">...</td></tr>
+                <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
     </div>
@@ -402,21 +396,19 @@
         dash.celIndicator.classList.toggle('active', data.CEL_Error != 0);
         dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
 
-        // --- 세부 데이터 테이블 업데이트 ---
-        // data 객체의 모든 키에 대해 반복하여 테이블 셀을 업데이트
+        // --- 세부 데이터 테이블 동적 업데이트 ---
+        let tableHtml = '';
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const element = document.getElementById(`td-${key}`);
-                if (element) {
-                    let value = data[key];
-                    // 숫자형 데이터는 소수점 자릿수 정리
-                    if (typeof value === 'number' && !Number.isInteger(value)) {
-                        value = value.toFixed(3).replace(/\.?0+$/, '') || '0'; // 0.000 -> 0
-                    }
-                    element.textContent = value;
+                let value = data[key];
+                if (typeof value === 'number' && !Number.isInteger(value)) {
+                    // 유효 숫자를 고려하여 소수점 자릿수 조정
+                    value = parseFloat(value.toFixed(3));
                 }
+                tableHtml += `<tr><td>${key}</td><td>${value}</td></tr>`;
             }
         }
+        ui.allDataTableBody.innerHTML = tableHtml;
     }
 
     // --- Firebase 데이터 수신 ---
@@ -426,7 +418,6 @@
     }, (error) => {
         console.error("Firebase read failed: " + error.code);
     });
-</script>
 </script>
 
 </body>
