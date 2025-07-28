@@ -219,8 +219,10 @@
 
 <div class="container">
     <nav>
-        <a href="#" class="tab-link active" data-tab="dashboard">Dashboard</a>
-        <a href="#" class="tab-link" data-tab="all-data">All Sensor Data</a>
+        <a href="#" class="tab-link active" data-tab="dashboard">ADU Dashboard</a>
+        <a href="#" class="tab-link" data-tab="all-data">All Sensors Data</a>
+        <a href="./dashboard.html">Main Dashboard</a>
+        <a href="./graph.html">Graph</a>
     </nav>
 
     <div id="dashboard" class="tab-content active">
@@ -230,8 +232,8 @@
                 <div class="gauge-bar-bg"><div class="gauge-bar" id="water-temp-bar"></div></div>
             </div>
             <div class="gauge">
-                <div class="gauge-label"><span>FUEL LEVEL</span><span id="fuel-level-value">...</span></div>
-                <div class="gauge-bar-bg"><div class="gauge-bar" id="fuel-level-bar"></div></div>
+                <div class="gauge-label"><span>FUEL PRESS</span><span id="fuel-press-value">...</span></div>
+                <div class="gauge-bar-bg"><div class="gauge-bar" id="fuel-press-bar"></div></div>
             </div>
         </div>
 
@@ -259,14 +261,18 @@
 
         <div class="bottom-info">
              <div class="indicators">
-                <span class="indicator" id="cel-indicator" title="Check Engine Light">
-                     <svg viewBox="0 0 24 24"><path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10,10-4.48,10-10S17.52,2,12,2z M13,17h-2v-2h2V17z M13,13h-2L11,7h2L13,13z"/></svg>
-                </span>
-                <span class="indicator" id="batt-indicator" title="Battery">
-                    <svg viewBox="0 0 24 24"><path d="M15.5,13.5h-1v-2h-3v2h-1c-0.83,0-1.5,0.67-1.5,1.5v3c0,0.83,0.67,1.5,1.5,1.5h5c0.83,0,1.5-0.67,1.5-1.5v-3C17,14.17,16.33,13.5,15.5,13.5z M4,5v14h16V5H4z"/></svg>
-                </span>
+                <div class="indicator" id="cel-indicator" title="Check Engine Light">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L22 21H2L12 2M11 10V14H13V10H11M11 16V18H13V16H11Z" />
+                    </svg>
+                </div>
+                <div class="indicator" id="batt-indicator" title="Low Battery">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16.5,4H15V2H9V4H7.5A1.5,1.5 0 0,0 6,5.5V20.5A1.5,1.5 0 0,0 7.5,22H16.5A1.5,1.5 0 0,0 18,20.5V5.5A1.5,1.5 0 0,0 16.5,4M13,18H11V16H13V18M13,14H11V9H13V14Z" />
+                    </svg>
+                </div>
              </div>
-             <div class="info-item" id="ecu-brand">ECU MASTER</div>
+             <div class="info-item" id="ecu-brand">무한질주</div>
              <div class="info-item" id="tps-value">TPS: 0%</div>
         </div>
     </div>
@@ -277,28 +283,31 @@
                 <tr><th>Parameter</th><th>Value</th></tr>
             </thead>
             <tbody>
-                <tr><td>RPM</td><td id="td-RPM">0</td></tr>
-                <tr><td>TPS (%)</td><td id="td-TPS_percent">0.0</td></tr>
-                <tr><td>MAP (kPa)</td><td id="td-MAP_kPa">0</td></tr>
-                <tr><td>Coolant Temp (°C)</td><td id="td-CLT_C">0</td></tr>
-                <tr><td>Intake Air Temp (°C)</td><td id="td-IAT_C">0</td></tr>
-                <tr><td>Vehicle Speed (km/h)</td><td id="td-VSS_kmh">0</td></tr>
-                <tr><td>Gear</td><td id="td-Gear">0</td></tr>
-                <tr><td>Battery (V)</td><td id="td-Batt_V">0.00</td></tr>
-                <tr><td>Oil Temp (°C)</td><td id="td-OilTemp_C">0</td></tr>
-                <tr><td>Oil Pressure (bar)</td><td id="td-OilPressure_bar">0.00</td></tr>
-                <tr><td>Fuel Pressure (bar)</td><td id="td-FuelPressure_bar">0.00</td></tr>
-                <tr><td>Lambda</td><td id="td-WBO_Lambda">0.000</td></tr>
-                <tr><td>Ignition Angle (deg)</td><td id="td-IgnAngle_deg">0.0</td></tr>
-                <tr><td>Pulse Width (ms)</td><td id="td-PulseWidth_ms">0.000</td></tr>
-                <tr><td>Check Engine Light Error</td><td id="td-CEL_Error">0</td></tr>
-                <tr><td>Timestamp</td><td id="td-Timestamp">...</td></tr>
+                <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
 <script>
+    // --- Firebase 설정 ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
+      authDomain: "emucanlogger.firebaseapp.com",
+      databaseURL: "https://emucanlogger-default-rtdb.firebaseio.com",
+      projectId: "emucanlogger",
+      storageBucket: "emucanlogger.firebasestorage.app",
+      messagingSenderId: "289716936070",
+      appId: "1:289716936070:web:8502e0f2c69ae362616007"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const dataRef = db.ref("emu_realtime_data");
+
     // --- 상수 정의 ---
     const MAX_RPM = 8000;
     const RPM_REDLINE_START = 7000;
@@ -320,22 +329,25 @@
             oilTempBar: document.getElementById('oil-temp-bar'),
             oilPressValue: document.getElementById('oil-press-value'),
             oilPressBar: document.getElementById('oil-press-bar'),
-            fuelLevelValue: document.getElementById('fuel-level-value'),
-            fuelLevelBar: document.getElementById('fuel-level-bar'),
+            fuelPressValue: document.getElementById('fuel-press-value'),
+            fuelPressBar: document.getElementById('fuel-press-bar'),
             tpsValue: document.getElementById('tps-value'),
             celIndicator: document.getElementById('cel-indicator'),
             battIndicator: document.getElementById('batt-indicator')
         },
-        allDataTable: document.querySelector('#all-data tbody')
+        allDataTableBody: document.querySelector('#all-data tbody')
     };
 
-    // --- 탭 전환 로직 ---
+    // --- 탭 전환 로직 (내부 탭) ---
     ui.tabs.links.forEach(link => {
         link.addEventListener('click', e => {
-            e.preventDefault();
             const targetTab = e.target.getAttribute('data-tab');
+            if (!targetTab) return; // 외부 링크는 무시
+            e.preventDefault();
+
             ui.tabs.links.forEach(l => l.classList.remove('active'));
             ui.tabs.contents.forEach(c => c.classList.remove('active'));
+            
             e.target.classList.add('active');
             document.getElementById(targetTab).classList.add('active');
         });
@@ -343,6 +355,8 @@
 
     // --- 데이터 UI 업데이트 함수 ---
     function updateUI(data) {
+        if (!data) return; // 데이터가 없으면 중단
+
         const rpm = data.RPM || 0;
         const rpmPercent = Math.min(rpm / MAX_RPM, 1) * 100;
 
@@ -355,11 +369,7 @@
         // RPM
         dash.rpmValue.textContent = `${rpm} RPM`;
         dash.rpmBar.style.width = `${rpmPercent}%`;
-        if (rpm > RPM_REDLINE_START) {
-            dash.rpmBar.style.backgroundColor = 'var(--warning-red)';
-        } else {
-            dash.rpmBar.style.backgroundColor = 'var(--accent-yellow)';
-        }
+        dash.rpmBar.style.backgroundColor = (rpm > RPM_REDLINE_START) ? 'var(--warning-red)' : 'var(--accent-yellow)';
 
         // 온도 게이지 (Water: 0-120°C, Oil: 0-140°C)
         const waterTemp = data.CLT_C || 0;
@@ -370,57 +380,43 @@
         dash.oilTempBar.style.width = `${Math.min((oilTemp / 140) * 100, 100)}%`;
         dash.oilTempValue.textContent = `${oilTemp}°C`;
 
-        // 압력 게이지 (Oil: 0-8bar)
+        // 압력 게이지 (Oil: 0-8bar, Fuel: 0-6bar)
         const oilPress = data.OilPressure_bar || 0;
         dash.oilPressBar.style.width = `${Math.min((oilPress / 8) * 100, 100)}%`;
         dash.oilPressValue.textContent = `${oilPress.toFixed(1)} bar`;
 
-        // 연료 레벨 및 TPS
-        const fuelLevel = data.FuelLevel_percent || 0;
-        dash.fuelLevelBar.style.width = `${fuelLevel}%`;
-        dash.fuelLevelValue.textContent = `${fuelLevel}%`;
+        const fuelPress = data.FuelPressure_bar || 0;
+        dash.fuelPressBar.style.width = `${Math.min((fuelPress / 6) * 100, 100)}%`;
+        dash.fuelPressValue.textContent = `${fuelPress.toFixed(1)} bar`;
+
+        // TPS
         dash.tpsValue.textContent = `TPS: ${data.TPS_percent || 0}%`;
 
         // 경고등
         dash.celIndicator.classList.toggle('active', data.CEL_Error != 0);
         dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
 
-        // --- 세부 데이터 테이블 업데이트 ---
+        // --- 세부 데이터 테이블 동적 업데이트 ---
+        let tableHtml = '';
         for (const key in data) {
-            const element = document.getElementById(`td-${key}`);
-            if (element) {
-                element.textContent = data[key];
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                let value = data[key];
+                if (typeof value === 'number' && !Number.isInteger(value)) {
+                    // 유효 숫자를 고려하여 소수점 자릿수 조정
+                    value = parseFloat(value.toFixed(3));
+                }
+                tableHtml += `<tr><td>${key}</td><td>${value}</td></tr>`;
             }
         }
+        ui.allDataTableBody.innerHTML = tableHtml;
     }
 
-    // --- 페이지 로드 시 테스트용 더미 데이터로 UI 채우기 ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const dummyData = {
-            RPM: 4625,
-            TPS_percent: 55.5,
-            IAT_C: 45,
-            MAP_kPa: 150,
-            PulseWidth_ms: 5.123,
-            VSS_kmh: 135,
-            OilTemp_C: 105,
-            OilPressure_bar: 4.3,
-            CLT_C: 96,
-            Gear: 4,
-            Batt_V: 13.8,
-            CEL_Error: 1, 
-            Timestamp: "2025-07-28 00:19:15.345",
-            FuelLevel_percent: 39 
-        };
-        updateUI(dummyData);
-
-        // 7500 RPM 테스트를 위한 예시
-        setTimeout(() => {
-            dummyData.RPM = 7500;
-            dummyData.VSS_kmh = 180;
-            dummyData.Gear = 5;
-            updateUI(dummyData);
-        }, 2000);
+    // --- Firebase 데이터 수신 ---
+    dataRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        updateUI(data);
+    }, (error) => {
+        console.error("Firebase read failed: " + error.code);
     });
 </script>
 
