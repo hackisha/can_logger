@@ -106,7 +106,7 @@
         #water-temp-bar, #oil-temp-bar {
             background: linear-gradient(to right, var(--temp-low), var(--temp-high));
         }
-        #fuel-level-bar, #oil-press-bar {
+        #fuel-press-bar, #oil-press-bar {
              background-color: var(--accent-yellow);
         }
 
@@ -371,22 +371,22 @@
         dash.rpmBar.style.width = `${rpmPercent}%`;
         dash.rpmBar.style.backgroundColor = (rpm > RPM_REDLINE_START) ? 'var(--warning-red)' : 'var(--accent-yellow)';
 
-        // 온도 게이지 (Water: 0-120°C, Oil: 0-140°C)
+        // 온도 게이지 (Water: 0-120°C, Oil: 0-140°C) - 음수 값을 0으로 처리
         const waterTemp = data.CLT_C || 0;
-        dash.waterTempBar.style.width = `${Math.min((waterTemp / 120) * 100, 100)}%`;
+        dash.waterTempBar.style.width = `${Math.min((Math.max(0, waterTemp) / 120) * 100, 100)}%`;
         dash.waterTempValue.textContent = `${waterTemp}°C`;
 
         const oilTemp = data.OilTemp_C || 0;
-        dash.oilTempBar.style.width = `${Math.min((oilTemp / 140) * 100, 100)}%`;
+        dash.oilTempBar.style.width = `${Math.min((Math.max(0, oilTemp) / 140) * 100, 100)}%`;
         dash.oilTempValue.textContent = `${oilTemp}°C`;
 
-        // 압력 게이지 (Oil: 0-8bar, Fuel: 0-6bar)
+        // 압력 게이지 (Oil: 0-8bar, Fuel: 0-6bar) - 음수 값을 0으로 처리
         const oilPress = data.OilPressure_bar || 0;
-        dash.oilPressBar.style.width = `${Math.min((oilPress / 8) * 100, 100)}%`;
+        dash.oilPressBar.style.width = `${Math.min((Math.max(0, oilPress) / 8) * 100, 100)}%`;
         dash.oilPressValue.textContent = `${oilPress.toFixed(1)} bar`;
 
         const fuelPress = data.FuelPressure_bar || 0;
-        dash.fuelPressBar.style.width = `${Math.min((fuelPress / 6) * 100, 100)}%`;
+        dash.fuelPressBar.style.width = `${Math.min((Math.max(0, fuelPress) / 6) * 100, 100)}%`;
         dash.fuelPressValue.textContent = `${fuelPress.toFixed(1)} bar`;
 
         // TPS
