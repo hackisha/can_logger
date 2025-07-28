@@ -341,15 +341,15 @@
             celIndicator: document.getElementById('cel-indicator'),
             battIndicator: document.getElementById('batt-indicator')
         },
-        allDataTable: document.querySelector('#all-data tbody')
+        allDataTableBody: document.querySelector('#all-data tbody')
     };
 
     // --- 탭 전환 로직 (내부 탭) ---
     ui.tabs.links.forEach(link => {
         link.addEventListener('click', e => {
-            e.preventDefault();
             const targetTab = e.target.getAttribute('data-tab');
             if (!targetTab) return; // 외부 링크는 무시
+            e.preventDefault();
 
             ui.tabs.links.forEach(l => l.classList.remove('active'));
             ui.tabs.contents.forEach(c => c.classList.remove('active'));
@@ -403,17 +403,18 @@
         dash.battIndicator.classList.toggle('active', (data.Batt_V || 14) < 12.0);
 
         // --- 세부 데이터 테이블 업데이트 ---
-        for (const key in data) {
-            const element = document.getElementById(`td-${key}`);
-            if (element) {
-                // 숫자형 데이터는 소수점 자릿수 정리
+        // 테이블의 모든 td 요소를 순회하며 업데이트
+        const allTds = ui.allDataTableBody.querySelectorAll('td[id]');
+        allTds.forEach(td => {
+            const key = td.id.replace('td-', '');
+            if (data.hasOwnProperty(key)) {
                 let value = data[key];
                 if (typeof value === 'number' && !Number.isInteger(value)) {
-                    value = value.toFixed(3);
+                    value = value.toFixed(3).replace(/\.?0+$/, ''); // 불필요한 소수점 0 제거
                 }
-                element.textContent = value;
+                td.textContent = value;
             }
-        }
+        });
     }
 
     // --- Firebase 데이터 수신 ---
@@ -423,6 +424,7 @@
     }, (error) => {
         console.error("Firebase read failed: " + error.code);
     });
+</script>
 </script>
 
 </body>
