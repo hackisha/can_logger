@@ -27,13 +27,15 @@ CAN_BITRATE = 500000
 EMU_ID_BASE = 0x600
 EMU_IDS = { f"FRAME_{i}": EMU_ID_BASE + i for i in range(8) }
 
-# --- 로그 디렉터리 ---
+# --- 로그 디렉터리 및 주기 ---
 LOG_DIR = "/home/pi/can_logger/logs"
+CSV_LOG_INTERVAL_SEC = 0.1 # CSV 로깅 주기 (초)
 # ==============================================================================
 
 # --- 전역 변수 (Global Variables) ---
 exit_event = threading.Event() # 프로그램 종료를 위한 스레드 안전 이벤트
 latest_data = {}
+latest_data_lock = threading.Lock() # latest_data 접근을 위한 락
 
 # --- 파서 함수들 (기존과 동일) ---
 def parse_emu_frame_0(data):
@@ -68,13 +70,40 @@ def firebase_uploader(db_ref):
     """주기적으로 Firebase에 최신 데이터를 업로드합니다."""
     while not exit_event.is_set():
         try:
-            if latest_data: # 데이터가 있을 때만 업로드
-                db_ref.update(latest_data)
+            with latest_data_lock:
+                if latest_data: # 데이터가 있을 때만 업로드
+                    data_to_upload = latest_data.copy()
+                else:
+                    data_to_upload = None
+            
+            if data_to_upload:
+                db_ref.update(data_to_upload)
+
         except Exception as e:
             print(f"\nFirebase 업로드 스레드 오류: {e}", file=sys.stderr)
         
-        # 다음 업로드까지 대기
         exit_event.wait(UPLOAD_INTERVAL_SEC)
+
+# --- CSV 로거 스레드 함수 ---
+def csv_logger(csv_writer, csv_file):
+    """주기적으로 최신 데이터를 CSV 파일에 기록합니다."""
+    while not exit_event.is_set():
+        try:
+            with latest_data_lock:
+                if latest_data:
+                    data_to_log = latest_data.copy()
+                else:
+                    data_to_log = None
+
+            if data_to_log:
+                data_to_log["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                csv_writer.writerow(data_to_log)
+
+        except Exception as e:
+            print(f"\nCSV 로거 스레드 오류: {e}", file=sys.stderr)
+
+        exit_event.wait(CSV_LOG_INTERVAL_SEC)
+
 
 # --- 종료 신호 처리 함수 ---
 def handle_exit(signum, frame):
@@ -102,7 +131,7 @@ def run_logger():
         db_ref = db.reference(FIREBASE_DB_PATH)
         print("Firebase 초기화 성공.")
 
-        bus = can.interface.Bus(channel=CAN_CHANNEL, bustype='socketcan')
+        bus = can.interface.Bus(channel=CAN_CHANNEL, interface='socketcan', bitrate=CAN_BITRATE)
         print("CAN 버스 (SocketCAN) 초기화 성공.")
 
         # --- CSV 파일 설정 ---
@@ -122,14 +151,28 @@ def run_logger():
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction='ignore')
         csv_writer.writeheader()
 
-        # --- 업로드 스레드 시작 ---
+        # --- 스레드 시작 ---
         uploader_thread = threading.Thread(target=firebase_uploader, args=(db_ref,), daemon=True)
         uploader_thread.start()
         print(f"Firebase 업로드 스레드 시작 (주기: {UPLOAD_INTERVAL_SEC}초).")
 
+        logger_thread = threading.Thread(target=csv_logger, args=(csv_writer, csv_file), daemon=True)
+        logger_thread.start()
+        print(f"CSV 로거 스레드 시작 (주기: {CSV_LOG_INTERVAL_SEC}초).")
+
+
         print("\n로깅을 시작합니다. 종료하려면 Ctrl+C 를 누르세요.")
 
-        parsers = {EMU_ID_BASE + i: globals()[f"parse_emu_frame_{i}"] for i in range(8)}
+        parsers = {
+            EMU_ID_BASE + 0: parse_emu_frame_0,
+            EMU_ID_BASE + 1: parse_emu_frame_1,
+            EMU_ID_BASE + 2: parse_emu_frame_2,
+            EMU_ID_BASE + 3: parse_emu_frame_3,
+            EMU_ID_BASE + 4: parse_emu_frame_4,
+            EMU_ID_BASE + 5: parse_emu_frame_5,
+            EMU_ID_BASE + 6: parse_emu_frame_6,
+            EMU_ID_BASE + 7: parse_emu_frame_7,
+        }
 
         # --- 메인 루프 ---
         while not exit_event.is_set():
@@ -142,17 +185,21 @@ def run_logger():
             parsed_values = parser(msg.data)
             if not parsed_values: continue
             
-            latest_data.update(parsed_values)
+            with latest_data_lock:
+                latest_data.update(parsed_values)
 
             # 화면은 매 메시지 수신 시마다 즉시 갱신
             ts_for_display = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-            print(f"[{ts_for_display}] RPM:{latest_data.get('RPM', 0):>5} | MAP:{latest_data.get('MAP_kPa', 0):>3}kPa | TPS:{latest_data.get('TPS_percent', 0):>5.1f}% | CLT:{latest_data.get('CLT_C', 0):>4}°C | Speed:{latest_data.get('VSS_kmh', 0):>3}km/h", end='\r')
+            with latest_data_lock:
+                # 화면 출력 시에도 락을 사용하여 데이터 일관성 유지
+                rpm = latest_data.get('RPM', 0)
+                map_kpa = latest_data.get('MAP_kPa', 0)
+                tps = latest_data.get('TPS_percent', 0)
+                clt = latest_data.get('CLT_C', 0)
+                vss = latest_data.get('VSS_kmh', 0)
 
-            # CSV 저장은 0x600 메시지 기준으로 수행 (데이터 무결성)
-            if msg.arbitration_id == EMU_IDS["FRAME_0"]:
-                latest_data["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                csv_writer.writerow(latest_data)
-                csv_file.flush()
+            print(f"[{ts_for_display}] RPM:{rpm:>5} | MAP:{map_kpa:>3}kPa | TPS:{tps:>5.1f}% | CLT:{clt:>4}°C | Speed:{vss:>3}km/h", end='\r')
+
 
     except FileNotFoundError:
         print(f"\n오류: Firebase 서비스 계정 키 파일을 찾을 수 없습니다: {SERVICE_ACCOUNT_KEY_PATH}", file=sys.stderr)
@@ -164,6 +211,13 @@ def run_logger():
     finally:
         # --- 리소스 정리 ---
         exit_event.set() # 모든 스레드에 종료 신호 전송
+        
+        # 스레드가 완전히 종료될 때까지 잠시 대기
+        if 'uploader_thread' in locals() and uploader_thread.is_alive():
+            uploader_thread.join(timeout=1)
+        if 'logger_thread' in locals() and logger_thread.is_alive():
+            logger_thread.join(timeout=1)
+
         if bus:
             bus.shutdown()
             print("\nCAN 버스가 종료되었습니다.")
