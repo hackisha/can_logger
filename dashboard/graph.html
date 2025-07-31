@@ -83,10 +83,12 @@
     <a href="./adu.html">ADU</a>
   </nav>
   <div class="dashboard">
-    <div class="sensor-box"><div class="sensor-title">CLT</div><div class="chart-container"><canvas id="cltChart"></canvas></div></div>
+    <div class="sensor-box"><div class="sensor-title">CLT IN</div><div class="chart-container"><canvas id="clt_IN_Chart"></canvas></div></div>
+    <div class="sensor-box"><div class="sensor-title">CLT OUT</div><div class="chart-container"><canvas id="clt_OUT_Chart"></canvas></div></div>
     <div class="sensor-box"><div class="sensor-title">EOT IN</div><div class="chart-container"><canvas id="eotInChart"></canvas></div></div>
     <div class="sensor-box"><div class="sensor-title">EOT OUT</div><div class="chart-container"><canvas id="eotOutChart"></canvas></div></div>
     <div class="sensor-box"><div class="sensor-title">TPS</div><div class="chart-container"><canvas id="tpsChart"></canvas></div></div>
+    <div class="sensor-box"><div class="sensor-title">IAT</div><div class="chart-container"><canvas id="IATChart"></canvas></div></div>
   </div>
 
   <script>
@@ -131,10 +133,12 @@
     }
 
     const charts = {
-        clt: createChart(document.getElementById('cltChart').getContext('2d'), 'CLT °C', '#4cc9f0'),
-        eotIn: createChart(document.getElementById('eotInChart').getContext('2d'), 'Oil Temp °C', '#f72585'),
-        eotOut: createChart(document.getElementById('eotOutChart').getContext('2d'), 'EGT 1 °C', '#b5179e'),
-        tps: createChart(document.getElementById('tpsChart').getContext('2d'), 'TPS %', '#00ff99')
+        clt_IN: createChart(document.getElementById('clt_IN_Chart').getContext('2d'), ' °C', '#4cc9f0'),
+        clt_OUT: createChart(document.getElementById('clt_OUT_Chart').getContext('2d'), ' °C', '#4cc9f0'),
+        eot_In: createChart(document.getElementById('eotInChart').getContext('2d'), ' °C', '#f72585'),
+        eot_Out: createChart(document.getElementById('eotOutChart').getContext('2d'), ' °C', '#b5179e'),
+        tps: createChart(document.getElementById('tpsChart').getContext('2d'), ' %', '#00ff99'),
+        IAT: createChart(document.getElementById('IATChart').getContext('2d'), ' °C', '#4cc9f0'),
     };
 
     function addData(chart, value) {
@@ -154,10 +158,12 @@
       const data = snapshot.val();
       if (!data) return;
       
-      addData(charts.clt, data.CLT_C);
-      addData(charts.eotIn, data.OilTemp_C);
-      addData(charts.eotOut, data.EGT1_C);
+      addData(charts.clt_IN, data.clt_IN);
+      addData(charts.clt_OUT, data.clt_OUT);
+      addData(charts.eotIn, data.eotIn);
+      addData(charts.eotOut, data.eotOut);
       addData(charts.tps, data.TPS_percent);
+      addData(charts.IAT, data.IAT);
     });
   </script>
 </body>
