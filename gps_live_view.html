@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Google Maps API 대신 Leaflet.js 사용 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -72,6 +71,10 @@
       padding: 20px;
       border-radius: 8px;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     #speed-display {
       font-family: 'Orbitron', sans-serif;
@@ -86,9 +89,24 @@
     }
     #map {
       width: 100%;
-      height: 60vh; /* 지도의 세로 크기를 늘림 */
+      height: 60vh;
       border: 2px solid #333;
       border-radius: 8px;
+    }
+    #reset-path-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      background-color: var(--accent-yellow);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #reset-path-btn:hover {
+      background-color: #fff;
     }
   </style>
 </head>
@@ -102,18 +120,19 @@
 
     <div class="content-grid">
       <div class="info-box">
-        <span id="speed-display">0.00</span>
-        <span id="speed-unit">km/h</span>
+        <div>
+          <span id="speed-display">0.00</span>
+          <span id="speed-unit">km/h</span>
+        </div>
+        <button id="reset-path-btn">경로 초기화</button>
       </div>
       <div id="map"></div>
     </div>
   </div>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
-    // adu.html과 동일한 Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
       authDomain: "emucanlogger.firebaseapp.com",
@@ -126,46 +145,46 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // UI 요소
     const speedDisplay = document.getElementById('speed-display');
+    const resetButton = document.getElementById('reset-path-btn');
 
-    // Leaflet Map 초기화
-    const initialPosition = [37.5665, 126.9780]; // 초기 위치: 서울
+    const initialPosition = [37.5665, 126.9780];
     const map = L.map('map').setView(initialPosition, 16);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
 	    subdomains: 'abcd',
 	    maxZoom: 20
-    }).addTo(map); // 어두운 테마의 지도 타일
+    }).addTo(map);
 
     const liveMarker = L.marker(initialPosition).addTo(map);
     const travelPath = L.polyline([], {color: 'red'}).addTo(map);
 
-    // Firebase 데이터 수신
-    // gps_tracker.py가 데이터를 저장하는 'gps_logs' 경로를 수신합니다.
-    const gpsRef = db.ref("gps_logs").limitToLast(500); // 최근 500개 ��이터
+    resetButton.addEventListener('click', () => {
+      travelPath.setLatLngs([]);
+      const currentPosition = liveMarker.getLatLng();
+      if (currentPosition) {
+        travelPath.addLatLng(currentPosition);
+      }
+      console.log('Path has been reset.');
+    });
+
+    const gpsRef = db.ref("gps_logs").limitToLast(500);
 
     gpsRef.on("child_added", (snapshot) => {
       const data = snapshot.val();
       if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-        
-        // 1. 속도계 업데이트
         const speed = data.speed_kph || 0;
         speedDisplay.textContent = speed.toFixed(2);
 
-        // 2. 지도 업데이트
         const newPosition = [data.latitude, data.longitude];
         
-        // 마커 위치 업데이트 및 팝업 설정
         liveMarker.setLatLng(newPosition)
           .bindPopup(`<b>속도:</b> ${speed.toFixed(2)} km/h<br><b>시간:</b> ${data.timestamp}`)
           .openPopup();
         
-        // 경로에 새 좌표 추가
         travelPath.addLatLng(newPosition);
         
-        // 지도를 최신 위치로 부드럽게 이동
         map.panTo(newPosition);
       }
     });
