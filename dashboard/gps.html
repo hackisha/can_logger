@@ -151,10 +151,10 @@
     const initialPosition = [37.5665, 126.9780];
     const map = L.map('map').setView(initialPosition, 16);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-	    subdomains: 'abcd',
-	    maxZoom: 20
+    // 밝은 기본 OpenStreetMap 타일로 교체
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	    maxZoom: 19
     }).addTo(map);
 
     const liveMarker = L.marker(initialPosition).addTo(map);
