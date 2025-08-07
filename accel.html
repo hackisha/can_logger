@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      overflow: hidden;
+    }
+
+    #tabs {
+      display: flex;
+      background: #222;
+      padding: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #333;
+      margin-right: 5px;
+      border-radius: 5px;
+    }
+
+    .tab.active {
+      background: #555;
+    }
+
+    .tab-content {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #tiltCanvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 10;
+    }
+
+    #gforceContainer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+    }
+
+    #gforceCanvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    #gforceValue {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #00ffff;
+      font-size: 32px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 탭 메뉴 -->
+  <div id="tabs">
+    <div class="tab active" onclick="showTab('tilt')">기울기</div>
+    <div class="tab" onclick="showTab('gforce')">G-Force</div>
+  </div>
+
+  <!-- 기울기 탭 -->
+  <div id="tilt" class="tab-content active">
+    <div id="info">Pitch: <span id="pitch">0</span>° | Roll: <span id="roll">0</span>°</div>
+    <canvas id="tiltCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <!-- G-Force 탭 -->
+  <div id="gforce" class="tab-content">
+    <div id="gforceContainer">
+      <canvas id="gforceCanvas"></canvas>
+      <div id="gforceValue">0.00G</div>
+    </div>
+  </div>
+
+  <!-- 라이브러리 로드 -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+    // === 탭 전환 ===
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelector('.tab[onclick="showTab(\'' + id + '\')"]').classList.add('active');
+      document.getElementById(id).classList.add('active');
+    }
+
+    // === 초기 가속도값
+    let ax = 0, ay = 0, az = 9.81;
+
+    // === 기울기 뷰 (Three.js)
+    const tiltCanvas = document.getElementById("tiltCanvas");
+    const renderer = new THREE.WebGLRenderer({canvas: tiltCanvas, alpha: true});
+    renderer.setSize(800, 600);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color("#222");
+
+    const camera = new THREE.PerspectiveCamera(60, 800 / 600, 0.1, 1000);
+    camera.position.set(0, 3, 6);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5, 10, 5);
+    scene.add(light);
+
+    const geometry = new THREE.BoxGeometry(3, 1, 5);
+    const material = new THREE.MeshPhongMaterial({color: 0x3399ff});
+    const car = new THREE.Mesh(geometry, material);
+    scene.add(car);
+
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshPhongMaterial({color: 0x444444, side: THREE.DoubleSide}));
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    const pitchText = document.getElementById("pitch");
+    const rollText = document.getElementById("roll");
+
+    function updateCarTilt() {
+      const pitch = Math.atan2(ax, Math.sqrt(ay * ay + az * az)) * 180 / Math.PI;
+      const roll = Math.atan2(ay, az) * 180 / Math.PI;
+
+      car.rotation.x = pitch * Math.PI / 180;
+      car.rotation.z = -roll * Math.PI / 180;
+
+      pitchText.textContent = pitch.toFixed(2);
+      rollText.textContent = roll.toFixed(2);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // === G-force 게이지 (Chart.js)
+    const gforceCtx = document.getElementById("gforceCanvas").getContext("2d");
+    const gforceChart = new Chart(gforceCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['G-Force'],
+        datasets: [{
+          label: 'G-Force',
+          data: [0, 2],
+          backgroundColor: ['#00ffff', '#333'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          tooltip: {enabled: false},
+          legend: {display: false},
+          title: {
+            display: true,
+            text: 'G-Force',
+            color: '#fff',
+            font: {size: 24}
+          }
+        }
+      }
+    });
+
+    function updateGforceGauge(gForce) {
+      const value = Math.min(gForce, 2.0);
+      gforceChart.data.datasets[0].data = [value, 2 - value];
+      gforceChart.update();
+      document.getElementById("gforceValue").textContent = gForce.toFixed(2) + "G";
+    }
+
+    // === 랜덤 테스트 시뮬레이션 (500ms마다 갱신)
+    setInterval(() => {
+      ax = (Math.random() - 0.5) * 4;
+      ay = (Math.random() - 0.5) * 4;
+      az = 9.81;
+
+      updateCarTilt();
+
+      const gForce = Math.sqrt(ax * ax + ay * ay + az * az) / 9.81;
+      updateGforceGauge(gForce);
+    }, 500);
+  </script>
+</body>
+</html>
