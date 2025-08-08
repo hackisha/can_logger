@@ -29,4 +29,4 @@ sudo systemctl daemon-reload
 sudo systemctl restart can_logger.service
 sudo systemctl status can_logger.service
 ```
-chmod x+ 로 start-can.sh, can_logger.service, can-start.service 권한 줘야함
+chmod +x 로 start-can.sh, can_logger.service, can-start.service 권한 줘야함
