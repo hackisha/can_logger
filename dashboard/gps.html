@@ -2,192 +2,420 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPS Live View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MF-25 - GPS</title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    :root {
-      --bg-color: #1a1a1a;
-      --panel-color: #2c2c2c;
-      --text-color: #e0e0e0;
-      --accent-yellow: #ffc300;
+    :root{
+      --bg-color:#1a1a1a;
+      --panel-color:#2c2c2c;
+      --text-color:#e0e0e0;
+      --accent-yellow:#ffc300;
+      --panel-border:#333;
+      --panel-shadow: rgba(0,0,0,0.5);
     }
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      box-sizing: border-box;
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:'Roboto',sans-serif;
+      background:var(--bg-color);
+      color:var(--text-color);
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+      padding:10px;
     }
-    .container {
-      width: 100%;
-      max-width: 1000px;
-      background-color: #000;
-      border: 2px solid #333;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+
+    .container{
+      width:100%;
+      max-width:1000px;
+      background:#000;
+      border:2px solid var(--panel-border);
+      border-radius:10px;
+      padding:10px;
+      box-shadow:0 0 20px var(--panel-shadow);
     }
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      border-bottom: 2px solid #333;
-      margin-bottom: 15px;
+
+    nav{
+      display:flex;
+      flex-wrap:wrap;
+      border-bottom:2px solid var(--panel-border);
+      margin-bottom:15px;
     }
-    nav a {
-      flex: 1;
-      min-width: 120px;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      color: var(--text-color);
-      text-decoration: none;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 500;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s ease;
+    nav a{
+      flex:1; min-width:120px; text-align:center; padding:10px;
+      color:var(--text-color); text-decoration:none;
+      font-family:'Orbitron',sans-serif; font-weight:500;
+      border-bottom:3px solid transparent; transition:all .3s ease;
     }
-    nav a.active {
-      color: var(--accent-yellow);
-      border-bottom-color: var(--accent-yellow);
+    nav a.active{ color:var(--accent-yellow); border-bottom-color:var(--accent-yellow); }
+
+    .map-section{
+      background:var(--panel-color);
+      border-radius:8px;
+      border:1px solid var(--panel-border);
+      padding:10px;
     }
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
+
+    /* 지도와 겹치지 않는 속도 바 */
+    .speed-bar{
+      display:flex; justify-content:center; gap:10px; align-items:baseline;
+      background:#0b0b0b; border:1px solid var(--panel-border);
+      border-radius:10px; padding:8px 14px; margin-bottom:10px;
     }
-    .info-box {
-      background-color: var(--panel-color);
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .speed-value{
+      font-family:'Orbitron',sans-serif; font-weight:900; letter-spacing:1px;
+      font-size:42px; line-height:1; color:var(--accent-yellow);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
-    #speed-display {
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 700;
-      font-size: 5rem;
-      color: var(--accent-yellow);
+    .speed-unit{ font-family:'Orbitron',sans-serif; color:#cfd8ff; opacity:0.9; font-size:16px; }
+
+    .map-wrap{
+      border-radius:10px; border:1px solid var(--panel-border);
+      overflow:hidden; background:#0b0b0b; box-shadow: inset 0 0 8px rgba(255,195,0,0.08);
     }
-    #speed-unit {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.5rem;
-      margin-left: 10px;
+    #map{ width:100%; height:520px; } /* 데이터 없어도 보이도록 고정 높이 */
+
+    .info-bar{
+      display:flex; gap:10px; align-items:stretch;
+      padding:10px; background:#0c0c0c; border:1px solid var(--panel-border);
+      border-radius:8px; margin-top:12px; flex-wrap:wrap;
     }
-    #map {
-      width: 100%;
-      height: 60vh;
-      border: 2px solid #333;
-      border-radius: 8px;
+    .info-card{
+      flex:1; min-width:180px; background:#111; border:1px solid var(--panel-border);
+      border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;
     }
-    #reset-path-btn {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1rem;
-      background-color: var(--accent-yellow);
-      color: var(--bg-color);
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+    .info-label{ font-size:12px; color:#bbb; }
+    .info-value{ font-family:'Orbitron',sans-serif; font-size:18px; color:var(--accent-yellow); font-weight:700; }
+
+    .actions{ display:flex; gap:10px; align-items:center; margin-left:auto; }
+    .btn-reset{
+      background:var(--accent-yellow); color:#111; border:1px solid #8c6d00;
+      border-radius:8px; padding:10px 14px; cursor:pointer; font-weight:900;
+      transition:filter .15s ease, transform .02s ease;
     }
-    #reset-path-btn:hover {
-      background-color: #fff;
+    .btn-reset:hover{ filter:brightness(1.03); }
+    .btn-reset:active{ transform:translateY(1px); }
+
+    .three-section{
+      margin-top:14px; background:var(--panel-color);
+      border:1px solid var(--panel-border); border-radius:8px; padding:10px;
+    }
+    .three-wrap{
+      position:relative; border-radius:10px; border:1px solid var(--panel-border);
+      overflow:hidden; background:#0a0a0a; height:380px;
+    }
+    canvas.three-canvas{ width:100%; height:100%; display:block; }
+
+    .accel-hud{
+      position:absolute; right:12px; top:12px;
+      background:rgba(0,0,0,0.45); border:1px solid #222; border-radius:10px;
+      padding:10px 12px; color:#eaeaea; font-size:13px; backdrop-filter: blur(3px); z-index: 5;
+    }
+    .accel-hud .title{ font-family:'Orbitron',sans-serif; color:#ffd866; font-size:12px; margin-bottom:6px; }
+    .accel-row{ display:flex; justify-content:space-between; gap:14px; }
+    .accel-row + .accel-row{ margin-top:4px; }
+    .badge{ color:#9bd3ff; }
+
+    @media (max-width:768px){
+      #map{ height:420px; }
+      .speed-value{ font-size:34px; }
+      .three-wrap{ height:320px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- NAV -->
     <nav>
-      <a href="./adu.html">Dashboard</a>
-      <a href="./graph.html">Graph</a>
-      <a href="./gps_live_view.html" class="active">GPS Live View</a>
+      <a href="./dashboard.html">Main Dashboard</a>
+      <a href="./sensor.html">Sensor data</a>
+      <a href="./gps.html" class="active">GPS</a>
     </nav>
 
-    <div class="content-grid">
-      <div class="info-box">
-        <div>
-          <span id="speed-display">0.00</span>
-          <span id="speed-unit">km/h</span>
-        </div>
-        <button id="reset-path-btn">경로 초기화</button>
+    <!-- MAP -->
+    <section class="map-section">
+      <div class="speed-bar" aria-live="polite">
+        <div id="speedVal" class="speed-value">--.-</div>
+        <div class="speed-unit">km/h</div>
       </div>
-      <div id="map"></div>
-    </div>
+
+      <div class="map-wrap">
+        <div id="map"></div>
+      </div>
+
+      <div class="info-bar">
+        <div class="info-card">
+          <div class="info-label">고도</div>
+          <div id="altVal" class="info-value">-- m</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">방향</div>
+          <div id="headVal" class="info-value">--°</div>
+        </div>
+
+        <div class="actions">
+          <button id="btnReset" class="btn-reset" title="기록된 이동경로를 지웁니다">이동경로 초기화</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- THREE.JS CAR PANEL -->
+    <section class="three-section">
+      <div class="three-wrap">
+        <div class="accel-hud">
+          <div class="title">ADXL345</div>
+          <div class="accel-row"><span class="badge">Ax</span><span id="axVal">--</span> <span>g</span></div>
+          <div class="accel-row"><span class="badge">Ay</span><span id="ayVal">--</span> <span>g</span></div>
+          <div class="accel-row"><span class="badge">Az</span><span id="azVal">--</span> <span>g</span></div>
+          <div class="accel-row" style="margin-top:6px;"><span class="badge">Pitch</span><span id="pitchVal">--</span> <span>°</span></div>
+          <div class="accel-row"><span class="badge">Roll</span><span id="rollVal">--</span> <span>°</span></div>
+        </div>
+        <canvas id="threeCanvas" class="three-canvas"></canvas>
+      </div>
+    </section>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- App (Leaflet + Firebase) -->
   <script>
+    /* global L, firebase */
+    // Nav active 보정(직접 링크로 들어온 경우 대비)
+    (function(){
+      const links = document.querySelectorAll('nav a');
+      const current = window.location.pathname.split('/').pop() || 'gps.html';
+      links.forEach(a => { if (a.getAttribute('href').includes(current)) a.classList.add('active'); });
+    })();
+
+    // Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyA44pnRn5t073UuSOPw3mkVwjvCLP4ZzJU",
       authDomain: "emucanlogger.firebaseapp.com",
       databaseURL: "https://emucanlogger-default-rtdb.firebaseio.com",
       projectId: "emucanlogger",
-      storageBucket: "emucanlogger.appspot.com",
+      storageBucket: "emucanlogger.firebasestorage.app",
       messagingSenderId: "289716936070",
       appId: "1:289716936070:web:8502e0f2c69ae362616007"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const speedDisplay = document.getElementById('speed-display');
-    const resetButton = document.getElementById('reset-path-btn');
+    // Leaflet Map – 데이터 없어도 기본 지도 표시
+    const map = L.map('map', { zoomControl: true }).setView([37.5665,126.9780], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19 }).addTo(map);
 
-    const initialPosition = [37.5665, 126.9780];
-    const map = L.map('map').setView(initialPosition, 16);
+    let marker = null;
+    let trackLine = L.polyline([], { color:'#ffc300', weight:4, opacity:0.9 }).addTo(map);
 
-    // 밝은 기본 OpenStreetMap 타일로 교체
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-	    maxZoom: 19
-    }).addTo(map);
+    const TRACK_KEY = 'mf25_gps_track';
+    function saveTrack(){
+      const latlngs = trackLine.getLatLngs().map(p => [p.lat, p.lng]);
+      localStorage.setItem(TRACK_KEY, JSON.stringify(latlngs));
+    }
+    (function restoreTrack(){
+      try{
+        const raw = localStorage.getItem(TRACK_KEY);
+        if(!raw) return;
+        const arr = JSON.parse(raw);
+        if(Array.isArray(arr) && arr.length){
+          trackLine.setLatLngs(arr);
+          map.fitBounds(trackLine.getBounds(), {padding:[20,20]});
+        }
+      }catch(e){}
+    })();
 
-    const liveMarker = L.marker(initialPosition).addTo(map);
-    const travelPath = L.polyline([], {color: 'red'}).addTo(map);
+    const speedEl = document.getElementById('speedVal');
+    const altEl = document.getElementById('altVal');
+    const headEl = document.getElementById('headVal');
+    const btnReset = document.getElementById('btnReset');
 
-    resetButton.addEventListener('click', () => {
-      travelPath.setLatLngs([]);
-      const currentPosition = liveMarker.getLatLng();
-      if (currentPosition) {
-        travelPath.addLatLng(currentPosition);
+    let lastLatLng = null;
+
+    // Firebase stream
+    const ref = db.ref("emu_realtime_data");
+    ref.on("value", snap => {
+      const d = snap.val();
+      if(!d) return;
+
+      if(d.lat!=null && d.lon!=null){
+        const lat = Number(d.lat), lon = Number(d.lon);
+        const ll = [lat, lon];
+        if(!marker){
+          marker = L.marker(ll).addTo(map);
+          map.setView(ll, 17, { animate:false });
+        } else {
+          marker.setLatLng(ll);
+        }
+        if(!lastLatLng || lastLatLng[0] !== lat || lastLatLng[1] !== lon){
+          trackLine.addLatLng(ll);
+          saveTrack();
+          lastLatLng = ll;
+        }
       }
-      console.log('Path has been reset.');
+
+      const spd = Number(d.VSS_kmh);
+      const alt = Number(d.altitude ?? d.alt ?? d.gps_alt);
+      const hdg = Number(d.heading ?? d.course ?? d.bearing);
+
+      speedEl.textContent = isFinite(spd) ? spd.toFixed(1) : "--.-";
+      altEl.textContent   = isFinite(alt) ? `${alt.toFixed(1)} m` : "-- m";
+      headEl.textContent  = isFinite(hdg) ? `${hdg.toFixed(0)}°` : "--°";
     });
 
-    const gpsRef = db.ref("gps_logs").limitToLast(500);
-
-    gpsRef.on("child_added", (snapshot) => {
-      const data = snapshot.val();
-      if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-        const speed = data.speed_kph || 0;
-        speedDisplay.textContent = speed.toFixed(2);
-
-        const newPosition = [data.latitude, data.longitude];
-        
-        liveMarker.setLatLng(newPosition)
-          .bindPopup(`<b>속도:</b> ${speed.toFixed(2)} km/h<br><b>시간:</b> ${data.timestamp}`)
-          .openPopup();
-        
-        travelPath.addLatLng(newPosition);
-        
-        map.panTo(newPosition);
-      }
+    btnReset.addEventListener('click', () => {
+      trackLine.setLatLngs([]);
+      localStorage.removeItem(TRACK_KEY);
     });
+  </script>
+
+  <!-- Three.js 모듈 (esm.sh 사용: bare specifier 문제 해결) -->
+  <script type="module">
+    /* global firebase */
+    import * as THREE from 'https://esm.sh/three@0.159.0';
+    import { OrbitControls } from 'https://esm.sh/three@0.159.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://esm.sh/three@0.159.0/examples/jsm/loaders/GLTFLoader.js';
+
+    const canvas = document.getElementById('threeCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(3.2, 2.0, 4.2);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.enablePan = false; controls.minDistance = 2; controls.maxDistance = 12;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(5,10,7); scene.add(dir);
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(20, 64),
+      new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95, metalness: 0.0 })
+    );
+    ground.rotateX(-Math.PI/2); ground.position.y = -0.01; scene.add(ground);
+
+    let car = new THREE.Group();
+    const loader = new GLTFLoader();
+    loader.load('./car.glb', (gltf)=>{
+      car = gltf.scene;
+
+      // 1) 스케일 정규화
+      const box0 = new THREE.Box3().setFromObject(car);
+      const size0 = new THREE.Vector3(); box0.getSize(size0);
+      const maxDim = Math.max(size0.x, size0.y, size0.z) || 1;
+      const scale = 2.0 / maxDim;
+      car.scale.setScalar(scale);
+
+      // 2) 중심 원점 맞추기
+      const box1 = new THREE.Box3().setFromObject(car);
+      const center = new THREE.Vector3(); box1.getCenter(center);
+      car.position.sub(center);
+
+      // 3) 바닥에 올리기
+      const box2 = new THREE.Box3().setFromObject(car);
+      const raise = -box2.min.y + 0.02;
+      car.position.y += raise;
+
+      scene.add(car);
+    }, undefined, (err)=>{
+      console.warn('car.glb 로드 실패:', err);
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(2,0.6,4),
+        new THREE.MeshStandardMaterial({ color: 0x2266ff, metalness:0.2, roughness:0.6 })
+      );
+      mesh.position.y = 0.3;
+      car.add(mesh);
+      scene.add(car);
+    });
+
+    function resize(){
+      const {width:w, height:h} = canvas.getBoundingClientRect();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h, false);
+      camera.aspect = w/h; camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // HUD refs
+    const axEl = document.getElementById('axVal');
+    const ayEl = document.getElementById('ayVal');
+    const azEl = document.getElementById('azVal');
+    const pitchEl = document.getElementById('pitchVal');
+    const rollEl  = document.getElementById('rollVal');
+
+    // accel smoothing
+    let accel = { ax: 0, ay: 0, az: 1 };
+    const smoothAlpha = 0.12;
+    const smoothUpdate = (k, t)=> accel[k] = accel[k] + (t - accel[k]) * smoothAlpha;
+
+    let targetPitch = 0, targetRoll = 0;
+    function updateModelRotation(){
+      car.rotation.x += (targetPitch - car.rotation.x) * 0.15;
+      car.rotation.z += (targetRoll  - car.rotation.z) * 0.15;
+    }
+    const computeAngles = (ax, ay, az)=> ({ 
+      pitch: Math.atan2(ax, Math.hypot(ay, az)),
+      roll : Math.atan2(ay, az)
+    });
+
+    // Firebase stream (모듈 스코프에서는 window 통해 접근)
+    const db2  = window.firebase.database();
+    const ref2 = db2.ref("emu_realtime_data");
+    ref2.on("value", snap => {
+      const d = snap.val(); if(!d) return;
+
+      const keys = [
+        {x:'ax_g', y:'ay_g', z:'az_g'},
+        {x:'ax', y:'ay', z:'az'},
+        {x:'AccelX', y:'AccelY', z:'AccelZ'},
+        {x:'acc_x', y:'acc_y', z:'acc_z'}
+      ];
+      let ax, ay, az;
+      for(const k of keys){
+        if(d[k.x]!==undefined && d[k.y]!==undefined && d[k.z]!==undefined){
+          ax = Number(d[k.x]); ay = Number(d[k.y]); az = Number(d[k.z]); break;
+        }
+      }
+      if(ax===undefined) return;
+
+      const toG = v => (!isFinite(v)? null : (Math.abs(v)>3.2 ? v/9.80665 : v));
+      ax = toG(ax); ay = toG(ay); az = toG(az);
+      if(ax==null || ay==null || az==null) return;
+
+      smoothUpdate('ax', ax); smoothUpdate('ay', ay); smoothUpdate('az', az);
+
+      axEl.textContent = accel.ax.toFixed(3);
+      ayEl.textContent = accel.ay.toFixed(3);
+      azEl.textContent = accel.az.toFixed(3);
+
+      const {pitch, roll} = computeAngles(accel.ax, accel.ay, accel.az);
+      targetPitch = pitch;   // 필요 시 부호 반전
+      targetRoll  = -roll;
+
+      pitchEl.textContent = (pitch*180/Math.PI).toFixed(1);
+      rollEl.textContent  = (roll *180/Math.PI).toFixed(1);
+    });
+
+    (function animate(){
+      requestAnimationFrame(animate);
+      updateModelRotation();
+      renderer.render(scene, camera);
+    })();
   </script>
 </body>
 </html>
