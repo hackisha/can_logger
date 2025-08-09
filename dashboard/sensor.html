@@ -217,7 +217,7 @@
       </div>
     </section>
 
-    <!-- All sensors table (cleaned like dashboard) -->
+    <!-- All sensors table (no scroll: shows full list) -->
     <div class="all-data">
       <div class="all-toolbar">
         <div class="all-title">All Sensors</div>
@@ -232,7 +232,8 @@
         <button id="copy-json" class="toolbar-btn" title="현재 스냅샷 JSON 복사">Copy JSON</button>
         <button id="copy-csv" class="toolbar-btn" title="현재 테이블 CSV 복사">Copy CSV</button>
       </div>
-      <div style="max-height: 380px; overflow:auto;">
+      <!-- ↓↓↓ 여기 스타일 래퍼의 max-height/overflow 제거 -->
+      <div>
         <table>
           <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
           <tbody id="all-data-body"></tbody>
@@ -262,7 +263,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Chart factory (theme-aligned)
+    // Chart factory
     function createChart(ctx, unitLabel, stroke){
       return new Chart(ctx, {
         type: 'line',
@@ -443,7 +444,7 @@
       if (lastSnapshot) renderAllSensorsTable(lastSnapshot);
     });
 
-    // filter (열 인덱스 조정)
+    // filter
     ui.filterInput.addEventListener('input', () => {
       const q = ui.filterInput.value.trim().toLowerCase();
       const rows = ui.allDataBody.querySelectorAll('tr');
@@ -454,7 +455,7 @@
       });
     });
 
-    // toggles (Δ 제거됨)
+    // toggles
     [ui.toggleHidden, ui.togglePin].forEach(el => {
       el.addEventListener('change', () => { if (lastSnapshot) renderAllSensorsTable(lastSnapshot); });
     });
